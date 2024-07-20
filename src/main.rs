@@ -11,6 +11,32 @@ impl Pattern {
     fn new(data: Vec<char>, width: usize, height: usize) -> Self {
         Pattern { data, width, height }
     }
+
+    fn rotate_90(&self) -> Self {
+        let mut rotated_data = vec![' '; self.width * self.height];
+        for y in 0..self.height {
+            for x in 0..self.width {
+                rotated_data[x * self.height + (self.height - 1 - y)] = self.data[y * self.width + x];
+            }
+        }
+        Pattern::new(rotated_data, self.height, self.width)
+    }
+
+    fn rotate_180(&self) -> Self {
+        let mut rotated_data = self.data.clone();
+        rotated_data.reverse();
+        Pattern::new(rotated_data, self.width, self.height)
+    }
+
+    fn rotate_270(&self) -> Self {
+        let mut rotated_data = vec![' '; self.width * self.height];
+        for y in 0..self.height {
+            for x in 0..self.width {
+                rotated_data[(self.width - 1 - x) * self.height + y] = self.data[y * self.width + x];
+            }
+        }
+        Pattern::new(rotated_data, self.height, self.width)
+    }
 }
 
 struct MarkovJunior {
@@ -31,7 +57,10 @@ impl MarkovJunior {
     }
 
     fn add_pattern(&mut self, input: Pattern, output: Pattern, weight: f32) {
-        self.patterns.push((input, output, weight));
+        self.patterns.push((input.clone(), output.clone(), weight));
+        self.patterns.push((input.rotate_90(), output.rotate_90(), weight));
+        self.patterns.push((input.rotate_180(), output.rotate_180(), weight));
+        self.patterns.push((input.rotate_270(), output.rotate_270(), weight));
     }
 
     fn generate(&mut self, iterations: usize) {
@@ -116,7 +145,7 @@ impl MarkovJunior {
 }
 
 fn main() {
-    let mut markov = MarkovJunior::new(20, 10);
+    let mut markov = MarkovJunior::new(20, 20);
 
     // Add some example patterns
     markov.add_pattern(
@@ -134,7 +163,12 @@ fn main() {
         Pattern::new(vec!['#', '#', '#'], 3, 1),
         0.5,
     );
+    markov.add_pattern(
+        Pattern::new(vec!['?', '.', '?', '.'], 2, 2),
+        Pattern::new(vec!['#', '#', '#', '#'], 2, 2),
+        0.3,
+    );
 
-    markov.generate(100);
+    markov.generate(1000);
     markov.print_grid();
 }
