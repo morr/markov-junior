@@ -1,4 +1,5 @@
 use rand::Rng;
+use std::collections::HashMap;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct Pattern {
@@ -123,6 +124,7 @@ struct MarkovJunior {
     width: usize,
     height: usize,
     rules: Vec<Rule>,
+    pattern_cache: HashMap<(usize, usize, Pattern), bool>,
 }
 
 impl MarkovJunior {
@@ -132,6 +134,7 @@ impl MarkovJunior {
             width,
             height,
             rules: Vec::new(),
+            pattern_cache: HashMap::new(),
         }
     }
 
@@ -147,21 +150,11 @@ impl MarkovJunior {
             let kind = self.rules[rule_index].kind;
 
             for _ in 0..steps {
-                let mut any_change = false;
-
-                match kind {
-                    RuleKind::One => {
-                        if self.apply_one_rule(&mut rng, rule_index) {
-                            any_change = true;
-                        }
-                    }
-                    RuleKind::All => {
-                        any_change |= self.apply_all_rule(rule_index);
-                    }
-                    RuleKind::Parallel => {
-                        any_change |= self.apply_parallel_rule(&mut rng, rule_index);
-                    }
-                }
+                let any_change = match kind {
+                    RuleKind::One => self.apply_one_rule(&mut rng, rule_index),
+                    RuleKind::All => self.apply_all_rule(rule_index),
+                    RuleKind::Parallel => self.apply_parallel_rule(&mut rng, rule_index),
+                };
 
                 if !any_change {
                     break;
@@ -186,7 +179,8 @@ impl MarkovJunior {
                 let output = self.rules[rule_index].patterns[pattern_index]
                     .output
                     .clone();
-                self.apply_pattern(x, y, output);
+                self.apply_pattern(x, y, &output);
+                self.pattern_cache.clear(); // Clear cache after modifying the grid
                 return true;
             }
         }
@@ -202,8 +196,12 @@ impl MarkovJunior {
             let output = self.rules[rule_index].patterns[pattern_index]
                 .output
                 .clone();
-            self.apply_pattern(x, y, output);
+            self.apply_pattern(x, y, &output);
             applied = true;
+        }
+
+        if applied {
+            self.pattern_cache.clear(); // Clear cache after modifying the grid
         }
 
         applied
@@ -216,16 +214,15 @@ impl MarkovJunior {
 
         for &(x, y, _, pattern_index) in &valid_patterns {
             if rng.gen_bool(0.5) {
-                let output = self.rules[rule_index].patterns[pattern_index]
-                    .output
-                    .clone();
-                Self::apply_pattern_to_grid(&mut new_grid, self.width, x, y, &output);
+                let output = &self.rules[rule_index].patterns[pattern_index].output;
+                Self::apply_pattern_to_grid(&mut new_grid, self.width, x, y, output);
                 applied = true;
             }
         }
 
         if applied {
             self.grid = new_grid;
+            self.pattern_cache.clear(); // Clear cache after modifying the grid
         }
 
         applied
@@ -249,26 +246,24 @@ impl MarkovJunior {
     }
 
     fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
+        if let Some(&result) = self.pattern_cache.get(&(x, y, pattern.clone())) {
+            return result;
+        }
+
         if x + pattern.width > self.width || y + pattern.height > self.height {
             return false;
         }
 
-        for py in 0..pattern.height {
-            for px in 0..pattern.width {
-                let grid_char = self.grid[(y + py) * self.width + (x + px)];
-                let pattern_char = pattern.data[py * pattern.width + px];
-
-                if pattern_char != ANYTHING && pattern_char != grid_char {
-                    return false;
-                }
-            }
-        }
-
-        true
+        pattern.data.iter().enumerate().all(|(i, &pattern_char)| {
+            let px = i % pattern.width;
+            let py = i / pattern.width;
+            let grid_char = self.grid[(y + py) * self.width + (x + px)];
+            pattern_char == ANYTHING || pattern_char == grid_char
+        })
     }
 
-    fn apply_pattern(&mut self, x: usize, y: usize, pattern: Pattern) {
-        Self::apply_pattern_to_grid(&mut self.grid, self.width, x, y, &pattern);
+    fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern) {
+        Self::apply_pattern_to_grid(&mut self.grid, self.width, x, y, pattern);
     }
 
     fn apply_pattern_to_grid(
@@ -278,12 +273,11 @@ impl MarkovJunior {
         y: usize,
         pattern: &Pattern,
     ) {
-        for py in 0..pattern.height {
-            for px in 0..pattern.width {
-                let pattern_char = pattern.data[py * pattern.width + px];
-                if pattern_char != ANYTHING {
-                    grid[(y + py) * width + (x + px)] = pattern_char;
-                }
+        for (i, &pattern_char) in pattern.data.iter().enumerate() {
+            let px = i % pattern.width;
+            let py = i / pattern.width;
+            if pattern_char != ANYTHING {
+                grid[(y + py) * width + (x + px)] = pattern_char;
             }
         }
     }
@@ -337,40 +331,121 @@ fn main() {
     // markov.add_rule(rule2);
     // markov.add_rule(rule3);
 
-    let mut markov = MarkovJunior::new('B', 20, 20);
+    // let mut markov = MarkovJunior::new('B', 20, 20);
+    //
+    // markov.add_rule(Rule::new(
+    //     RuleKind::One,
+    //     vec![PatternRule {
+    //         input: Pattern::new("B"),
+    //         output: Pattern::new("W"),
+    //         weight: 1.0,
+    //     }],
+    //     Some(1),
+    // ));
+    // markov.add_rule(Rule::new(
+    //     RuleKind::One,
+    //     vec![PatternRule {
+    //         input: Pattern::new("B"),
+    //         output: Pattern::new("R"),
+    //         weight: 1.0,
+    //     }],
+    //     Some(1),
+    // ));
+    // markov.add_rule(Rule::new(
+    //     RuleKind::One,
+    //     vec![PatternRule {
+    //         input: Pattern::new("RB"),
+    //         output: Pattern::new("RR"),
+    //         weight: 1.0,
+    //     }, PatternRule {
+    //         input: Pattern::new("WB"),
+    //         output: Pattern::new("WW"),
+    //         weight: 1.0,
+    //     }],
+    //     None,
+    // ));
 
-    markov.add_rule(Rule::new(
-        RuleKind::One,
-        vec![PatternRule {
-            input: Pattern::new("B"),
-            output: Pattern::new("W"),
-            weight: 1.0,
-        }],
-        Some(1),
-    ));
-    markov.add_rule(Rule::new(
-        RuleKind::One,
-        vec![PatternRule {
-            input: Pattern::new("B"),
-            output: Pattern::new("R"),
-            weight: 1.0,
-        }],
-        Some(1),
-    ));
-    markov.add_rule(Rule::new(
-        RuleKind::One,
-        vec![PatternRule {
-            input: Pattern::new("RB"),
-            output: Pattern::new("RR"),
-            weight: 1.0,
-        }, PatternRule {
-            input: Pattern::new("WB"),
-            output: Pattern::new("WW"),
-            weight: 1.0,
-        }],
-        None,
-    ));
+    // let xml = r#"
+    // <sequence value="B" width="80" height="80">
+    //   <one in="B" out="W" steps="1"/>
+    //   <one in="B" out="R" steps="1"/>
+    //   <one steps="20000">
+    //     <rule in="RB" out="RR"/>
+    //     <rule in="WB" out="WW"/>
+    //   </one>
+    // </sequence>
+    // "#;
+    let xml = r#"
+    <sequence value="B" width="60" height="60">
+      <one in="B" out="W" steps="1"/>
+      <one in="B" out="R" steps="1"/>
+      <one>
+        <rule in="RB" out="RR"/>
+        <rule in="WB" out="WW"/>
+      </one>
+      <all in="RW" out="UU"/>
+      <all>
+        <rule in="W" out="B"/>
+        <rule in="R" out="B"/>
+      </all>
+      <all in="UB" out="UU" steps="1"/>
+      <all in="BU/UB" out="U*/**"/>
+      <all in="UB" out="*G"/>
+      <one in="B" out="E" steps="13"/>
+      <one>
+        <rule in="EB" out="*E"/>
+        <rule in="GB" out="*G"/>
+      </one>
+    </sequence>
+    "#;
+
+    let mut markov = parse_xml(xml);
 
     markov.generate();
     markov.print_grid();
+}
+
+fn parse_xml(xml: &str) -> MarkovJunior {
+    let doc = roxmltree::Document::parse(xml).unwrap();
+    let root = doc.root_element();
+
+    let width = root.attribute("width").unwrap().parse().unwrap();
+    let height = root.attribute("height").unwrap().parse().unwrap();
+    let initial_value = root.attribute("value").unwrap().chars().next().unwrap();
+
+    let mut markov = MarkovJunior::new(initial_value, width, height);
+    // markov.grid = vec![initial_value; width * height];
+
+    for node in root.children().filter(|n| n.is_element()) {
+        let rule_kind = match node.tag_name().name() {
+            "one" => RuleKind::One,
+            "all" => RuleKind::All,
+            "parallel" => RuleKind::Parallel,
+            _ => continue,
+        };
+
+        let steps = node.attribute("steps").map(|s| s.parse().ok()).flatten();
+
+        let patterns = if node.has_attribute("in") && node.has_attribute("out") {
+            vec![PatternRule {
+                input: Pattern::new(node.attribute("in").unwrap()),
+                output: Pattern::new(node.attribute("out").unwrap()),
+                weight: 1.0,
+            }]
+        } else {
+            node.children()
+                .filter(|n| n.is_element() && n.tag_name().name() == "rule")
+                .map(|n| PatternRule {
+                    input: Pattern::new(n.attribute("in").unwrap()),
+                    output: Pattern::new(n.attribute("out").unwrap()),
+                    weight: 1.0,
+                })
+                .collect()
+        };
+
+        let rule = Rule::new(rule_kind, patterns, steps);
+        markov.add_rule(rule);
+    }
+
+    markov
 }
