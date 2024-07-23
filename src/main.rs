@@ -7,8 +7,15 @@ struct Pattern {
     height: usize,
 }
 
+const PATTERN_DELIMITER: char = '/';
+
 impl Pattern {
-    fn new(data: Vec<char>, width: usize, height: usize) -> Self {
+    fn new(line: &str) -> Self {
+        let parts: Vec<&str> = line.split(PATTERN_DELIMITER).collect();
+        let width = parts[0].len();
+        let height = parts.len();
+        let data: Vec<char> = parts.join("").chars().collect();
+
         Pattern {
             data,
             width,
@@ -24,13 +31,21 @@ impl Pattern {
                     self.data[y * self.width + x];
             }
         }
-        Pattern::new(rotated_data, self.height, self.width)
+        Pattern {
+            data: rotated_data,
+            width: self.height,
+            height: self.width,
+        }
     }
 
     fn rotate_180(&self) -> Self {
         let mut rotated_data = self.data.clone();
         rotated_data.reverse();
-        Pattern::new(rotated_data, self.width, self.height)
+        Pattern {
+            data: rotated_data,
+            width: self.width,
+            height: self.height,
+        }
     }
 
     fn rotate_270(&self) -> Self {
@@ -41,7 +56,11 @@ impl Pattern {
                     self.data[y * self.width + x];
             }
         }
-        Pattern::new(rotated_data, self.height, self.width)
+        Pattern {
+            data: rotated_data,
+            width: self.height,
+            height: self.width,
+        }
     }
 }
 
@@ -285,8 +304,8 @@ fn main() {
     let rule1 = Rule::new(
         RuleKind::One,
         vec![PatternRule {
-            input: Pattern::new(vec!['?', '.'], 2, 1),
-            output: Pattern::new(vec!['#', '#'], 2, 1),
+            input: Pattern::new("?."),
+            output: Pattern::new("##"),
             weight: 1.0,
         }],
         Some(5), // Apply this rule 5 times
@@ -295,8 +314,8 @@ fn main() {
     let rule2 = Rule::new(
         RuleKind::All,
         vec![PatternRule {
-            input: Pattern::new(vec!['.', '?', '.'], 3, 1),
-            output: Pattern::new(vec!['#', '#', '#'], 3, 1),
+            input: Pattern::new(".?."),
+            output: Pattern::new("###"),
             weight: 0.5,
         }],
         None, // Apply this rule until no more changes
@@ -305,8 +324,8 @@ fn main() {
     let rule3 = Rule::new(
         RuleKind::Parallel,
         vec![PatternRule {
-            input: Pattern::new(vec!['?', '.', '?', '.'], 2, 2),
-            output: Pattern::new(vec!['#', '#', '#', '#'], 2, 2),
+            input: Pattern::new("?./?."),
+            output: Pattern::new("##/##"),
             weight: 0.3,
         }],
         Some(10), // Apply this rule 10 times
@@ -320,4 +339,3 @@ fn main() {
     markov.generate();
     markov.print_grid();
 }
-
