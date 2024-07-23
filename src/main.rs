@@ -318,13 +318,12 @@ fn parse_xml(xml: &str) -> MarkovJunior {
     let initial_value = root.attribute("value").unwrap().chars().next().unwrap();
 
     let mut markov = MarkovJunior::new(initial_value, width, height);
-    // markov.grid = vec![initial_value; width * height];
 
     for node in root.children().filter(|n| n.is_element()) {
         let rule_kind = match node.tag_name().name() {
             "one" => RuleKind::One,
             "all" => RuleKind::All,
-            "parallel" => RuleKind::Parallel,
+            "prl" => RuleKind::Parallel,
             _ => continue,
         };
 
