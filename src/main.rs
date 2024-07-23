@@ -45,6 +45,13 @@ impl Pattern {
     }
 }
 
+#[derive(Clone)]
+struct PatternRule {
+    input: Pattern,
+    output: Pattern,
+    weight: f32,
+}
+
 #[derive(Clone, Copy)]
 enum RuleKind {
     One,
@@ -53,32 +60,41 @@ enum RuleKind {
 }
 
 struct Rule {
-    patterns: Vec<(Pattern, Pattern, f32)>,
+    patterns: Vec<PatternRule>,
     kind: RuleKind,
     steps: Option<usize>,
 }
 
 impl Rule {
-    fn new(kind: RuleKind, patterns: Vec<(Pattern, Pattern, f32)>, steps: Option<usize>) -> Self {
+    fn new(kind: RuleKind, patterns: Vec<PatternRule>, steps: Option<usize>) -> Self {
         let mut rule = Rule {
             patterns: Vec::new(),
             kind,
             steps,
         };
-        for (input, output, weight) in patterns {
-            rule.add_pattern(input, output, weight);
+        for pattern in patterns {
+            rule.add_pattern(pattern);
         }
         rule
     }
 
-    fn add_pattern(&mut self, input: Pattern, output: Pattern, weight: f32) {
-        self.patterns.push((input.clone(), output.clone(), weight));
-        self.patterns
-            .push((input.rotate_90(), output.rotate_90(), weight));
-        self.patterns
-            .push((input.rotate_180(), output.rotate_180(), weight));
-        self.patterns
-            .push((input.rotate_270(), output.rotate_270(), weight));
+    fn add_pattern(&mut self, pattern: PatternRule) {
+        self.patterns.push(pattern.clone());
+        self.patterns.push(PatternRule {
+            input: pattern.input.rotate_90(),
+            output: pattern.output.rotate_90(),
+            weight: pattern.weight,
+        });
+        self.patterns.push(PatternRule {
+            input: pattern.input.rotate_180(),
+            output: pattern.output.rotate_180(),
+            weight: pattern.weight,
+        });
+        self.patterns.push(PatternRule {
+            input: pattern.input.rotate_270(),
+            output: pattern.output.rotate_270(),
+            weight: pattern.weight,
+        });
     }
 }
 
@@ -147,8 +163,10 @@ impl MarkovJunior {
         for &(x, y, weight, pattern_index) in &valid_patterns {
             choice -= weight;
             if choice <= 0.0 {
-                let output = self.rules[rule_index].patterns[pattern_index].1.clone();
-                self.apply_pattern(x, y, &output);
+                let output = self.rules[rule_index].patterns[pattern_index]
+                    .output
+                    .clone();
+                self.apply_pattern(x, y, output);
                 return true;
             }
         }
@@ -161,8 +179,10 @@ impl MarkovJunior {
         let mut applied = false;
 
         for &(x, y, _, pattern_index) in &valid_patterns {
-            let output = self.rules[rule_index].patterns[pattern_index].1.clone();
-            self.apply_pattern(x, y, &output);
+            let output = self.rules[rule_index].patterns[pattern_index]
+                .output
+                .clone();
+            self.apply_pattern(x, y, output);
             applied = true;
         }
 
@@ -176,8 +196,9 @@ impl MarkovJunior {
 
         for &(x, y, _, pattern_index) in &valid_patterns {
             if rng.gen_bool(0.5) {
-                // 50% chance to apply each valid pattern
-                let output = self.rules[rule_index].patterns[pattern_index].1.clone();
+                let output = self.rules[rule_index].patterns[pattern_index]
+                    .output
+                    .clone();
                 Self::apply_pattern_to_grid(&mut new_grid, self.width, x, y, &output);
                 applied = true;
             }
@@ -196,9 +217,9 @@ impl MarkovJunior {
 
         for y in 0..self.height {
             for x in 0..self.width {
-                for (pattern_index, (input, _, weight)) in rule.patterns.iter().enumerate() {
-                    if self.pattern_fits(x, y, input) {
-                        valid_patterns.push((x, y, *weight, pattern_index));
+                for (pattern_index, pattern) in rule.patterns.iter().enumerate() {
+                    if self.pattern_fits(x, y, &pattern.input) {
+                        valid_patterns.push((x, y, pattern.weight, pattern_index));
                     }
                 }
             }
@@ -226,8 +247,8 @@ impl MarkovJunior {
         true
     }
 
-    fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern) {
-        Self::apply_pattern_to_grid(&mut self.grid, self.width, x, y, pattern);
+    fn apply_pattern(&mut self, x: usize, y: usize, pattern: Pattern) {
+        Self::apply_pattern_to_grid(&mut self.grid, self.width, x, y, &pattern);
     }
 
     fn apply_pattern_to_grid(
@@ -263,31 +284,31 @@ fn main() {
     // Create rules with patterns and steps
     let rule1 = Rule::new(
         RuleKind::One,
-        vec![(
-            Pattern::new(vec!['?', '.'], 2, 1),
-            Pattern::new(vec!['#', '#'], 2, 1),
-            1.0,
-        )],
+        vec![PatternRule {
+            input: Pattern::new(vec!['?', '.'], 2, 1),
+            output: Pattern::new(vec!['#', '#'], 2, 1),
+            weight: 1.0,
+        }],
         Some(5), // Apply this rule 5 times
     );
 
     let rule2 = Rule::new(
         RuleKind::All,
-        vec![(
-            Pattern::new(vec!['.', '?', '.'], 3, 1),
-            Pattern::new(vec!['#', '#', '#'], 3, 1),
-            0.5,
-        )],
+        vec![PatternRule {
+            input: Pattern::new(vec!['.', '?', '.'], 3, 1),
+            output: Pattern::new(vec!['#', '#', '#'], 3, 1),
+            weight: 0.5,
+        }],
         None, // Apply this rule until no more changes
     );
 
     let rule3 = Rule::new(
         RuleKind::Parallel,
-        vec![(
-            Pattern::new(vec!['?', '.', '?', '.'], 2, 2),
-            Pattern::new(vec!['#', '#', '#', '#'], 2, 2),
-            0.3,
-        )],
+        vec![PatternRule {
+            input: Pattern::new(vec!['?', '.', '?', '.'], 2, 2),
+            output: Pattern::new(vec!['#', '#', '#', '#'], 2, 2),
+            weight: 0.3,
+        }],
         Some(10), // Apply this rule 10 times
     );
 
@@ -299,3 +320,4 @@ fn main() {
     markov.generate();
     markov.print_grid();
 }
+
