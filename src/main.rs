@@ -294,7 +294,7 @@ impl MarkovJunior {
 
 fn main() {
     let xml = r#"
-    <sequence value="B" width="100" height="100">
+    <sequence value="B" width="50" height="50">
       <one in="B" out="W" steps="1"/>
       <one in="B" out="R" steps="1"/>
       <one>
