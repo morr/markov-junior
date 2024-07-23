@@ -91,8 +91,9 @@ impl MarkovJunior {
         for _ in 0..iterations {
             let mut any_change = false;
 
-            for (rule_index, rule) in self.rules.iter().enumerate() {
-                match rule.kind {
+            for rule_index in 0..self.rules.len() {
+                let rule_kind = self.rules[rule_index].kind;
+                match rule_kind {
                     RuleKind::One => {
                         if self.apply_one_rule(&mut rng, rule_index) {
                             any_change = true;
@@ -121,7 +122,7 @@ impl MarkovJunior {
             return false;
         }
 
-        let total_weight: f32 = valid_patterns.iter().map(|&(_, _, weight)| weight).sum();
+        let total_weight: f32 = valid_patterns.iter().map(|&(_, _, weight, _)| weight).sum();
         let mut choice = rng.gen::<f32>() * total_weight;
 
         for &(x, y, weight, pattern_index) in &valid_patterns {
