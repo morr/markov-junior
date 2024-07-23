@@ -1,6 +1,5 @@
 use rand::Rng;
 use rayon::prelude::*;
-use std::collections::HashMap;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct Pattern {
@@ -125,7 +124,6 @@ struct MarkovJunior {
     width: usize,
     height: usize,
     rules: Vec<Rule>,
-    pattern_cache: HashMap<(usize, usize, Pattern), bool>,
 }
 
 impl MarkovJunior {
@@ -135,7 +133,6 @@ impl MarkovJunior {
             width,
             height,
             rules: Vec::new(),
-            pattern_cache: HashMap::new(),
         }
     }
 
@@ -181,7 +178,6 @@ impl MarkovJunior {
                     .output
                     .clone();
                 self.apply_pattern(x, y, &output);
-                self.pattern_cache.clear();
                 return true;
             }
         }
@@ -199,10 +195,6 @@ impl MarkovJunior {
                 .clone();
             self.apply_pattern(x, y, &output);
             applied = true;
-        }
-
-        if applied {
-            self.pattern_cache.clear();
         }
 
         applied
@@ -223,7 +215,6 @@ impl MarkovJunior {
             }
         }
 
-        self.pattern_cache.clear(); // Clear cache before applying changes
         for (x, y, output) in changes {
             self.apply_pattern(x, y, &output);
         }
@@ -253,10 +244,6 @@ impl MarkovJunior {
     }
 
     fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
-        if let Some(&result) = self.pattern_cache.get(&(x, y, pattern.clone())) {
-            return result;
-        }
-
         if x + pattern.width > self.width || y + pattern.height > self.height {
             return false;
         }
@@ -268,7 +255,6 @@ impl MarkovJunior {
             pattern_char == ANYTHING || pattern_char == grid_char
         });
 
-        // self.pattern_cache.insert((x, y, pattern.clone()), result);
         result
     }
 
