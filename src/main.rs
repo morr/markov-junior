@@ -8,6 +8,7 @@ struct Pattern {
 }
 
 const PATTERN_DELIMITER: char = '/';
+const ANYTHING: char = '*';
 
 impl Pattern {
     fn new(line: &str) -> Self {
@@ -125,9 +126,9 @@ struct MarkovJunior {
 }
 
 impl MarkovJunior {
-    fn new(width: usize, height: usize) -> Self {
+    fn new(default: char, width: usize, height: usize) -> Self {
         MarkovJunior {
-            grid: vec!['.'; width * height],
+            grid: vec![default; width * height],
             width,
             height,
             rules: Vec::new(),
@@ -257,7 +258,7 @@ impl MarkovJunior {
                 let grid_char = self.grid[(y + py) * self.width + (x + px)];
                 let pattern_char = pattern.data[py * pattern.width + px];
 
-                if pattern_char != '?' && pattern_char != grid_char {
+                if pattern_char != ANYTHING && pattern_char != grid_char {
                     return false;
                 }
             }
@@ -280,7 +281,7 @@ impl MarkovJunior {
         for py in 0..pattern.height {
             for px in 0..pattern.width {
                 let pattern_char = pattern.data[py * pattern.width + px];
-                if pattern_char != '?' {
+                if pattern_char != ANYTHING {
                     grid[(y + py) * width + (x + px)] = pattern_char;
                 }
             }
@@ -298,43 +299,77 @@ impl MarkovJunior {
 }
 
 fn main() {
-    let mut markov = MarkovJunior::new(20, 20);
+    // let mut markov = MarkovJunior::new('.', 20, 20);
+    //
+    // // Create rules with patterns and steps
+    // let rule1 = Rule::new(
+    //     RuleKind::One,
+    //     vec![PatternRule {
+    //         input: Pattern::new("*."),
+    //         output: Pattern::new("##"),
+    //         weight: 1.0,
+    //     }],
+    //     Some(5), // Apply this rule 5 times
+    // );
+    //
+    // let rule2 = Rule::new(
+    //     RuleKind::All,
+    //     vec![PatternRule {
+    //         input: Pattern::new(".*."),
+    //         output: Pattern::new("###"),
+    //         weight: 0.5,
+    //     }],
+    //     None, // Apply this rule until no more changes
+    // );
+    //
+    // let rule3 = Rule::new(
+    //     RuleKind::Parallel,
+    //     vec![Patter nRule {
+    //         input: Pattern::new("*./*."),
+    //         output: Pattern::new("##/##"),
+    //         weight: 0.3,
+    //     }],
+    //     Some(10), // Apply this rule 10 times
+    // );
+    //
+    // // Add rules to MarkovJunior
+    // markov.add_rule(rule1);
+    // markov.add_rule(rule2);
+    // markov.add_rule(rule3);
 
-    // Create rules with patterns and steps
-    let rule1 = Rule::new(
+    let mut markov = MarkovJunior::new('B', 20, 20);
+
+    markov.add_rule(Rule::new(
         RuleKind::One,
         vec![PatternRule {
-            input: Pattern::new("?."),
-            output: Pattern::new("##"),
+            input: Pattern::new("B"),
+            output: Pattern::new("W"),
             weight: 1.0,
         }],
-        Some(5), // Apply this rule 5 times
-    );
-
-    let rule2 = Rule::new(
-        RuleKind::All,
+        Some(1),
+    ));
+    markov.add_rule(Rule::new(
+        RuleKind::One,
         vec![PatternRule {
-            input: Pattern::new(".?."),
-            output: Pattern::new("###"),
-            weight: 0.5,
+            input: Pattern::new("B"),
+            output: Pattern::new("R"),
+            weight: 1.0,
         }],
-        None, // Apply this rule until no more changes
-    );
-
-    let rule3 = Rule::new(
-        RuleKind::Parallel,
+        Some(1),
+    ));
+    markov.add_rule(Rule::new(
+        RuleKind::One,
         vec![PatternRule {
-            input: Pattern::new("?./?."),
-            output: Pattern::new("##/##"),
-            weight: 0.3,
+            input: Pattern::new("RB"),
+            output: Pattern::new("RR"),
+            weight: 1.0,
+        }, PatternRule {
+            input: Pattern::new("WB"),
+            output: Pattern::new("WW"),
+            weight: 1.0,
         }],
-        Some(10), // Apply this rule 10 times
-    );
-
-    // Add rules to MarkovJunior
-    markov.add_rule(rule1);
-    markov.add_rule(rule2);
-    markov.add_rule(rule3);
+        None,
+    ));
 
     markov.generate();
     markov.print_grid();
