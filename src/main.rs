@@ -282,19 +282,44 @@ impl MarkovJunior {
         valid_patterns
     }
 
+    // fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
+    //     if x + pattern.width > self.width || y + pattern.height > self.height {
+    //         return false;
+    //     }
+    //
+    //     let result = pattern.data.iter().enumerate().all(|(i, &pattern_char)| {
+    //         let px = i % pattern.width;
+    //         let py = i / pattern.width;
+    //         let grid_char = self.grid[(y + py) * self.width + (x + px)] as char;
+    //         pattern_char == ANYTHING || pattern_char == grid_char
+    //     });
+    //
+    //     result
+    // }
+
     fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
+        // Ensure the pattern fits within the grid boundaries
         if x + pattern.width > self.width || y + pattern.height > self.height {
             return false;
         }
 
-        let result = pattern.data.iter().enumerate().all(|(i, &pattern_char)| {
-            let px = i % pattern.width;
-            let py = i / pattern.width;
-            let grid_char = self.grid[(y + py) * self.width + (x + px)] as char;
-            pattern_char == ANYTHING || pattern_char == grid_char
-        });
+        let pattern_data = &pattern.data;
+        let grid_width = self.width;
+        let grid = &self.grid;
 
-        result
+        for py in 0..pattern.height {
+            for px in 0..pattern.width {
+                let pattern_char = pattern_data[py * pattern.width + px];
+                if pattern_char != ANYTHING {
+                    let grid_char = grid[(y + py) * grid_width + (x + px)] as char;
+                    if pattern_char != grid_char {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        true
     }
 
     fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern) {
