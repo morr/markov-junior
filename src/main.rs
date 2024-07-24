@@ -1,5 +1,5 @@
 use rand::Rng;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct Pattern {
@@ -169,14 +169,14 @@ impl MarkovJunior {
             return false;
         }
 
-        let total_weight: f32 = valid_patterns.iter().map(|&(_, _, weight, _)| weight).sum();
+        let total_weight: f32 = valid_patterns.iter().map(|&(_, _, weight, _, _)| weight).sum();
         let mut choice = rng.gen::<f32>() * total_weight;
 
-        for &(x, y, weight, pattern_index) in &valid_patterns {
+        for &(x, y, weight, pattern_index, subpattern_index) in &valid_patterns {
             choice -= weight;
             if choice <= 0.0 {
                 let output = self.rules[rule_index].patterns[pattern_index]
-                    .output
+                    .outputs[subpattern_index]
                     .clone();
                 self.apply_pattern(x, y, &output);
                 return true;
@@ -190,9 +190,9 @@ impl MarkovJunior {
         let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
         let mut applied = false;
 
-        for &(x, y, _, pattern_index) in &valid_patterns {
+        for &(x, y, _, pattern_index, subpattern_index) in &valid_patterns {
             let output = self.rules[rule_index].patterns[pattern_index]
-                .output
+                .outputs[subpattern_index]
                 .clone();
             self.apply_pattern(x, y, &output);
             applied = true;
@@ -206,10 +206,10 @@ impl MarkovJunior {
         let mut applied = false;
         let mut changes = Vec::new();
 
-        for &(x, y, _, pattern_index) in &valid_patterns {
+        for &(x, y, _, pattern_index, subpattern_index) in &valid_patterns {
             if rng.gen_bool(0.5) {
                 let output = self.rules[rule_index].patterns[pattern_index]
-                    .output
+                    .outputs[subpattern_index]
                     .clone();
                 changes.push((x, y, output));
                 applied = true;
@@ -266,15 +266,18 @@ impl MarkovJunior {
     //         .collect()
     // }
 
-    fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize)> {
+    fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize, usize)> {
         let mut valid_patterns = Vec::new();
         let rule = &self.rules[rule_index];
 
         for y in 0..self.height {
             for x in 0..self.width {
-                for (pattern_index, pattern) in rule.patterns.iter().enumerate() {
-                    if self.pattern_fits(x, y, &pattern.input) {
-                        valid_patterns.push((x, y, pattern.weight, pattern_index));
+                'pattern: for (pattern_index, pattern) in rule.patterns.iter().enumerate() {
+                    for subpattern_index in 0..pattern.inputs.len() {
+                        if self.pattern_fits(x, y, &pattern.inputs[subpattern_index]) {
+                            valid_patterns.push((x, y, pattern.weight, pattern_index, subpattern_index));
+                            break 'pattern;
+                        }
                     }
                 }
             }
@@ -395,18 +398,18 @@ fn parse_xml(xml: &str) -> MarkovJunior {
         let steps = node.attribute("steps").and_then(|s| s.parse().ok());
 
         let patterns = if node.has_attribute("in") && node.has_attribute("out") {
-            vec![PatternRule {
-                input: Pattern::new(node.attribute("in").unwrap()),
-                output: Pattern::new(node.attribute("out").unwrap()),
-                weight: 1.0,
-            }]
+            vec![PatternRule::new(
+                Pattern::new(node.attribute("in").unwrap()),
+                Pattern::new(node.attribute("out").unwrap()),
+            )]
         } else {
             node.children()
                 .filter(|n| n.is_element() && n.tag_name().name() == "rule")
-                .map(|n| PatternRule {
-                    input: Pattern::new(n.attribute("in").unwrap()),
-                    output: Pattern::new(n.attribute("out").unwrap()),
-                    weight: 1.0,
+                .map(|n| {
+                    PatternRule::new(
+                        Pattern::new(n.attribute("in").unwrap()),
+                        Pattern::new(n.attribute("out").unwrap()),
+                    )
                 })
                 .collect()
         };
