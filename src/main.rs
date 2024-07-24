@@ -68,9 +68,29 @@ impl Pattern {
 
 #[derive(Clone)]
 struct PatternRule {
-    input: Pattern,
-    output: Pattern,
+    inputs: [Pattern; 4],
+    outputs: [Pattern; 4],
     weight: f32,
+}
+
+impl PatternRule {
+    pub fn new(input: Pattern, output: Pattern) -> PatternRule {
+        PatternRule {
+            inputs: [
+                input.rotate_90(),
+                input.rotate_270(),
+                input.rotate_180(),
+                input,
+            ],
+            outputs: [
+                output.rotate_90(),
+                output.rotate_270(),
+                output.rotate_180(),
+                output,
+            ],
+            weight: 1.0,
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -94,28 +114,9 @@ impl Rule {
             steps,
         };
         for pattern in patterns {
-            rule.add_pattern(pattern);
+            rule.patterns.push(pattern);
         }
         rule
-    }
-
-    fn add_pattern(&mut self, pattern: PatternRule) {
-        self.patterns.push(pattern.clone());
-        self.patterns.push(PatternRule {
-            input: pattern.input.rotate_90(),
-            output: pattern.output.rotate_90(),
-            weight: pattern.weight,
-        });
-        self.patterns.push(PatternRule {
-            input: pattern.input.rotate_180(),
-            output: pattern.output.rotate_180(),
-            weight: pattern.weight,
-        });
-        self.patterns.push(PatternRule {
-            input: pattern.input.rotate_270(),
-            output: pattern.output.rotate_270(),
-            weight: pattern.weight,
-        });
     }
 }
 
