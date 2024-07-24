@@ -169,14 +169,17 @@ impl MarkovJunior {
             return false;
         }
 
-        let total_weight: f32 = valid_patterns.iter().map(|&(_, _, weight, _, _)| weight).sum();
+        let total_weight: f32 = valid_patterns
+            .iter()
+            .map(|&(_, _, weight, _, _)| weight)
+            .sum();
         let mut choice = rng.gen::<f32>() * total_weight;
 
         for &(x, y, weight, pattern_index, subpattern_index) in &valid_patterns {
             choice -= weight;
             if choice <= 0.0 {
-                let output = self.rules[rule_index].patterns[pattern_index]
-                    .outputs[subpattern_index]
+                let output = self.rules[rule_index].patterns[pattern_index].outputs
+                    [subpattern_index]
                     .clone();
                 self.apply_pattern(x, y, &output);
                 return true;
@@ -191,9 +194,8 @@ impl MarkovJunior {
         let mut applied = false;
 
         for &(x, y, _, pattern_index, subpattern_index) in &valid_patterns {
-            let output = self.rules[rule_index].patterns[pattern_index]
-                .outputs[subpattern_index]
-                .clone();
+            let output =
+                self.rules[rule_index].patterns[pattern_index].outputs[subpattern_index].clone();
             self.apply_pattern(x, y, &output);
             applied = true;
         }
@@ -208,8 +210,8 @@ impl MarkovJunior {
 
         for &(x, y, _, pattern_index, subpattern_index) in &valid_patterns {
             if rng.gen_bool(0.5) {
-                let output = self.rules[rule_index].patterns[pattern_index]
-                    .outputs[subpattern_index]
+                let output = self.rules[rule_index].patterns[pattern_index].outputs
+                    [subpattern_index]
                     .clone();
                 changes.push((x, y, output));
                 applied = true;
@@ -266,7 +268,10 @@ impl MarkovJunior {
     //         .collect()
     // }
 
-    fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize, usize)> {
+    fn find_valid_patterns_for_rule(
+        &self,
+        rule_index: usize,
+    ) -> Vec<(usize, usize, f32, usize, usize)> {
         let mut valid_patterns = Vec::new();
         let rule = &self.rules[rule_index];
 
@@ -275,7 +280,13 @@ impl MarkovJunior {
                 'pattern: for (pattern_index, pattern) in rule.patterns.iter().enumerate() {
                     for subpattern_index in 0..pattern.inputs.len() {
                         if self.pattern_fits(x, y, &pattern.inputs[subpattern_index]) {
-                            valid_patterns.push((x, y, pattern.weight, pattern_index, subpattern_index));
+                            valid_patterns.push((
+                                x,
+                                y,
+                                pattern.weight,
+                                pattern_index,
+                                subpattern_index,
+                            ));
                             break 'pattern;
                         }
                     }
