@@ -222,25 +222,64 @@ impl MarkovJunior {
         applied
     }
 
+    // fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize)> {
+    //     let rule = &self.rules[rule_index];
+    //
+    //     (0..self.height)
+    //         .into_par_iter()
+    //         .flat_map_iter(|y| {
+    //             (0..self.width).flat_map(move |x| {
+    //                 rule.patterns
+    //                     .iter()
+    //                     .enumerate()
+    //                     .filter_map(move |(pattern_index, pattern)| {
+    //                         if self.pattern_fits(x, y, &pattern.input) {
+    //                             Some((x, y, pattern.weight, pattern_index))
+    //                         } else {
+    //                             None
+    //                         }
+    //                     })
+    //             })
+    //         })
+    //         .collect()
+    // }
+
+    // fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize)> {
+    //     let rule = &self.rules[rule_index];
+    //     (0..self.height)
+    //         .into_par_iter()
+    //         .flat_map_iter(|y| {
+    //             (0..self.width).flat_map(move |x| {
+    //                 rule.patterns
+    //                     .iter()
+    //                     .enumerate()
+    //                     .filter_map(move |(pattern_index, pattern)| {
+    //                         if self.pattern_fits(x, y, &pattern.input) {
+    //                             Some((x, y, pattern.weight, pattern_index))
+    //                         } else {
+    //                             None
+    //                         }
+    //                     })
+    //             })
+    //         })
+    //         .collect()
+    // }
+
     fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize)> {
+        let mut valid_patterns = Vec::new();
         let rule = &self.rules[rule_index];
-        (0..self.height)
-            .into_par_iter()
-            .flat_map_iter(|y| {
-                (0..self.width).flat_map(move |x| {
-                    rule.patterns
-                        .iter()
-                        .enumerate()
-                        .filter_map(move |(pattern_index, pattern)| {
-                            if self.pattern_fits(x, y, &pattern.input) {
-                                Some((x, y, pattern.weight, pattern_index))
-                            } else {
-                                None
-                            }
-                        })
-                })
-            })
-            .collect()
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                for (pattern_index, pattern) in rule.patterns.iter().enumerate() {
+                    if self.pattern_fits(x, y, &pattern.input) {
+                        valid_patterns.push((x, y, pattern.weight, pattern_index));
+                    }
+                }
+            }
+        }
+
+        valid_patterns
     }
 
     fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
