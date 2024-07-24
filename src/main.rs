@@ -1,7 +1,36 @@
 use rand::Rng;
+
+// #[cfg(feature = "parallel")]
 // use rayon::prelude::*;
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
+struct PatternRule {
+    inputs: [Pattern; 4],
+    outputs: [Pattern; 4],
+    weight: f32,
+}
+
+impl PatternRule {
+    pub fn new(input: Pattern, output: Pattern) -> PatternRule {
+        PatternRule {
+            inputs: [
+                input.rotate_90(),
+                input.rotate_270(),
+                input.rotate_180(),
+                input,
+            ],
+            outputs: [
+                output.rotate_90(),
+                output.rotate_270(),
+                output.rotate_180(),
+                output,
+            ],
+            weight: 1.0,
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct Pattern {
     data: Vec<char>,
     width: usize,
@@ -66,33 +95,6 @@ impl Pattern {
     }
 }
 
-#[derive(Clone)]
-struct PatternRule {
-    inputs: [Pattern; 4],
-    outputs: [Pattern; 4],
-    weight: f32,
-}
-
-impl PatternRule {
-    pub fn new(input: Pattern, output: Pattern) -> PatternRule {
-        PatternRule {
-            inputs: [
-                input.rotate_90(),
-                input.rotate_270(),
-                input.rotate_180(),
-                input,
-            ],
-            outputs: [
-                output.rotate_90(),
-                output.rotate_270(),
-                output.rotate_180(),
-                output,
-            ],
-            weight: 1.0,
-        }
-    }
-}
-
 #[derive(Clone, Copy)]
 enum RuleKind {
     One,
@@ -145,10 +147,11 @@ impl MarkovJunior {
         let mut rng = rand::thread_rng();
 
         for rule_index in 0..self.rules.len() {
-            let steps = self.rules[rule_index].steps.unwrap_or(usize::MAX);
+            let steps = self.rules[rule_index].steps.unwrap_or(self.width * self.height * 16);
             let kind = self.rules[rule_index].kind;
 
-            for _ in 0..steps {
+            for _step in 0..steps {
+                // println!("rule_index {rule_index} step {step}");
                 let any_change = match kind {
                     RuleKind::One => self.apply_one_rule(&mut rng, rule_index),
                     RuleKind::All => self.apply_all_rule(rule_index),
@@ -225,49 +228,32 @@ impl MarkovJunior {
         applied
     }
 
-    // fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize)> {
+    // #[cfg(feature = "parallel")]
+    // fn find_valid_patterns_for_rule(
+    //     &self,
+    //     rule_index: usize,
+    // ) -> Vec<(usize, usize, f32, usize, usize)> {
     //     let rule = &self.rules[rule_index];
     //
     //     (0..self.height)
     //         .into_par_iter()
     //         .flat_map_iter(|y| {
     //             (0..self.width).flat_map(move |x| {
-    //                 rule.patterns
-    //                     .iter()
-    //                     .enumerate()
-    //                     .filter_map(move |(pattern_index, pattern)| {
-    //                         if self.pattern_fits(x, y, &pattern.input) {
-    //                             Some((x, y, pattern.weight, pattern_index))
+    //                 rule.patterns.iter().enumerate().flat_map(move |(pattern_index, pattern)| {
+    //                     pattern.inputs.iter().enumerate().filter_map(move |(subpattern_index, input)| {
+    //                         if self.pattern_fits(x, y, input) {
+    //                             Some((x, y, pattern.weight, pattern_index, subpattern_index))
     //                         } else {
     //                             None
     //                         }
     //                     })
+    //                 })
     //             })
     //         })
     //         .collect()
     // }
 
-    // fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize)> {
-    //     let rule = &self.rules[rule_index];
-    //     (0..self.height)
-    //         .into_par_iter()
-    //         .flat_map_iter(|y| {
-    //             (0..self.width).flat_map(move |x| {
-    //                 rule.patterns
-    //                     .iter()
-    //                     .enumerate()
-    //                     .filter_map(move |(pattern_index, pattern)| {
-    //                         if self.pattern_fits(x, y, &pattern.input) {
-    //                             Some((x, y, pattern.weight, pattern_index))
-    //                         } else {
-    //                             None
-    //                         }
-    //                     })
-    //             })
-    //         })
-    //         .collect()
-    // }
-
+    // #[cfg(not(feature = "parallel"))]
     fn find_valid_patterns_for_rule(
         &self,
         rule_index: usize,
@@ -296,21 +282,6 @@ impl MarkovJunior {
 
         valid_patterns
     }
-
-    // fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
-    //     if x + pattern.width > self.width || y + pattern.height > self.height {
-    //         return false;
-    //     }
-    //
-    //     let result = pattern.data.iter().enumerate().all(|(i, &pattern_char)| {
-    //         let px = i % pattern.width;
-    //         let py = i / pattern.width;
-    //         let grid_char = self.grid[(y + py) * self.width + (x + px)] as char;
-    //         pattern_char == ANYTHING || pattern_char == grid_char
-    //     });
-    //
-    //     result
-    // }
 
     fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
         // Ensure the pattern fits within the grid boundaries
@@ -359,7 +330,7 @@ impl MarkovJunior {
 
 fn main() {
     let xml = r#"
-    <sequence value="B" width="50" height="50">
+    <sequence value="B" width="125" height="125">
       <one in="B" out="W" steps="1"/>
       <one in="B" out="R" steps="1"/>
       <one>
