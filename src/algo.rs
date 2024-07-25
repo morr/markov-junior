@@ -35,11 +35,16 @@ impl PatternRule {
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Pattern {
-    data: Vec<char>,
-    width: usize,
-    height: usize,
-    canonical_form: Vec<char>,
-    rotation: usize, // 0, 1, 2, or 3 representing 0°, 90°, 180°, 270°
+    pub data: Vec<char>,
+    pub width: usize,
+    pub height: usize,
+    pub canonical_form: CanonicalForm,
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub struct CanonicalForm {
+    pub data: Vec<char>,
+    pub rotation: usize, // 0, 1, 2, or 3 representing 0°, 90°, 180°, 270°
 }
 
 pub const PATTERN_DELIMITER: char = '/';
@@ -51,32 +56,39 @@ impl Pattern {
         let width = parts[0].len();
         let height = parts.len();
         let data = parts.join("").chars().collect::<Vec<char>>();
-        let (canonical_form, rotation) = Self::compute_canonical_form(&data, width, height);
+        let canonical_form = Self::compute_canonical_form(&data, width, height);
 
         Pattern {
             data,
             width,
             height,
             canonical_form,
-            rotation,
         }
     }
 
-    pub fn compute_canonical_form(
-        data: &[char],
-        width: usize,
-        height: usize,
-    ) -> (Vec<char>, usize) {
+    pub fn compute_canonical_form(data: &[char], width: usize, height: usize) -> CanonicalForm {
         let rotations = [
-            (data.to_vec(), 0),
-            (Self::rotate_90(data, width, height), 1),
-            (Self::rotate_180(data), 2),
-            (Self::rotate_270(data, width, height), 3),
+            CanonicalForm {
+                data: data.to_vec(),
+                rotation: 0,
+            },
+            CanonicalForm {
+                data: Self::rotate_90(data, width, height),
+                rotation: 1,
+            },
+            CanonicalForm {
+                data: Self::rotate_180(data),
+                rotation: 2,
+            },
+            CanonicalForm {
+                data: Self::rotate_270(data, width, height),
+                rotation: 3,
+            },
         ];
 
         rotations
             .into_iter()
-            .min_by_key(|(rotated_data, _)| rotated_data.iter().collect::<String>())
+            .min_by_key(|CanonicalForm { data, .. }| data.iter().collect::<String>())
             .unwrap()
     }
 
@@ -139,7 +151,7 @@ pub struct MarkovJunior {
     pub width: usize,
     pub height: usize,
     pub rules: Vec<Rule>,
-    pub canonical_forms: HashMap<(usize, usize), Vec<char>>,
+    pub canonical_forms: HashMap<(usize, usize), Vec<CanonicalForm>>,
 }
 
 impl MarkovJunior {
@@ -206,8 +218,7 @@ impl MarkovJunior {
                         y,
                         canonical_key.0,
                         canonical_key.1,
-                    )
-                    .0;
+                    );
                 }
             }
         }
@@ -334,7 +345,7 @@ impl MarkovJunior {
         y: usize,
         pattern_width: usize,
         pattern_height: usize,
-    ) -> (String, usize) {
+    ) -> CanonicalForm {
         let mut data = Vec::with_capacity(pattern_width * pattern_height);
         for py in 0..pattern_height {
             for px in 0..pattern_width {
