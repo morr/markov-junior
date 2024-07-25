@@ -3,24 +3,29 @@ use markov_junior::*;
 #[test]
 fn test_compute_canonical_form() {
     let data = vec!['A', 'B', 'C', 'D'];
-    let (canonical, rotation) = Pattern::compute_canonical_form(&data, 2, 2);
-    assert_eq!(canonical, vec!['A', 'B', 'C', 'D']);
-    assert_eq!(rotation, 0);
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(canonical_form.rotation, 0);
 
     let data = vec!['B', 'D', 'A', 'C'];
-    let (canonical, rotation) = Pattern::compute_canonical_form(&data, 2, 2);
-    assert_eq!(canonical, vec!['A', 'B', 'C', 'D']);
-    assert_eq!(rotation, 1);
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(canonical_form.rotation, 1);
 
     let data = vec!['D', 'C', 'B', 'A'];
-    let (canonical, rotation) = Pattern::compute_canonical_form(&data, 2, 2);
-    assert_eq!(canonical, vec!['A', 'B', 'C', 'D']);
-    assert_eq!(rotation, 2);
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(canonical_form.rotation, 2);
 
     let data = vec!['C', 'A', 'D', 'B'];
-    let (canonical, rotation) = Pattern::compute_canonical_form(&data, 2, 2);
-    assert_eq!(canonical, vec!['A', 'B', 'C', 'D']);
-    assert_eq!(rotation, 3);
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(canonical_form.rotation, 3);
+
+    let data = vec!['B', 'A'];
+    let canonical_form = Pattern::compute_canonical_form(&data, 1, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'B']);
+    assert_eq!(canonical_form.rotation, 1);
 }
 
 #[test]
