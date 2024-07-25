@@ -1,4 +1,4 @@
-use std::collections::{HashMap};
+use std::collections::HashMap;
 
 use rand::Rng;
 
@@ -161,10 +161,11 @@ impl MarkovJunior {
         let mut rng = rand::thread_rng();
 
         for rule_index in 0..self.rules.len() {
-            let steps = self.rules[rule_index]
-                .steps
-                .unwrap_or(self.width * self.height * 16);
-            let kind = self.rules[rule_index].kind;
+            let rule = &self.rules[rule_index];
+            let steps = rule.steps.unwrap_or(self.width * self.height * 16);
+            let kind = rule.kind;
+
+            self.calculate_canonical_forms(rule_index);
 
             for _step in 0..steps {
                 // println!("rule_index {rule_index} step {step}");
@@ -176,6 +177,37 @@ impl MarkovJunior {
 
                 if !any_change {
                     break;
+                }
+            }
+        }
+    }
+
+    fn calculate_canonical_forms(&mut self, rule_index: usize) {
+        for pattern_index in 0..self.rules[rule_index].patterns.len() {
+            let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
+
+            let Some(canonical_key) = pattern_rule.canonical_key else {
+                continue;
+            };
+
+            if self.canonical_forms.contains_key(&canonical_key) {
+                continue;
+            }
+
+            for y in 0..self.height {
+                for x in 0..self.width {
+                    let index = y * self.width + x;
+
+                    self.canonical_forms[index] = Self::compute_cell_canonical_form(
+                        &self.grid,
+                        self.width,
+                        self.height,
+                        x,
+                        y,
+                        canonical_key.0,
+                        canonical_key.1,
+                    )
+                    .0;
                 }
             }
         }
@@ -292,6 +324,30 @@ impl MarkovJunior {
                 self.grid[(y + py) * self.width + (x + px)] = pattern_char as u8;
             }
         }
+    }
+
+    fn compute_cell_canonical_form(
+        grid: &[u8],
+        width: usize,
+        height: usize,
+        x: usize,
+        y: usize,
+        pattern_width: usize,
+        pattern_height: usize,
+    ) -> (String, usize) {
+        let mut data = Vec::with_capacity(pattern_width * pattern_height);
+        for py in 0..pattern_height {
+            for px in 0..pattern_width {
+                let gx = x + px;
+                let gy = y + py;
+                if gx < width && gy < height {
+                    data.push(grid[gy * width + gx] as char);
+                } else {
+                    data.push(' ');
+                }
+            }
+        }
+        Pattern::compute_canonical_form(&data, pattern_width, pattern_height)
     }
 
     pub fn print_grid(&self) {
