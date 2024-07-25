@@ -49,44 +49,41 @@ impl Pattern {
         }
     }
 
-    fn compute_canonical_form(data: &Vec<char>, width: usize, height: usize) -> (Vec<char>, usize) {
+    fn compute_canonical_form(data: &[char], width: usize, height: usize) -> (Vec<char>, usize) {
         let rotations = [
             (data.to_vec(), 0),
             (Self::rotate_90(data, width, height), 1),
-            (Self::rotate_180(data, width, height), 2),
+            (Self::rotate_180(data), 2),
             (Self::rotate_270(data, width, height), 3),
         ];
 
         rotations
             .into_iter()
             .min_by_key(|(rotated_data, _)| rotated_data.iter().collect::<String>())
-            .map(|(rotated_data, rotation)| (rotated_data, rotation))
             .unwrap()
     }
 
-    fn rotate_90(data: &Vec<char>, width: usize, height: usize) -> Vec<char> {
+    fn rotate_90(data: &[char], width: usize, height: usize) -> Vec<char> {
         let mut rotated_data = vec![' '; width * height];
         for y in 0..height {
             for x in 0..width {
-                rotated_data[x * height + (height - 1 - y)] =
-                    data[y * width + x];
+                rotated_data[x * height + (height - 1 - y)] = data[y * width + x];
             }
         }
         rotated_data
     }
 
-    fn rotate_180(data: &Vec<char>, _width: usize, _height: usize) -> Vec<char> {
-        let mut rotated_data = data.clone();
+    fn rotate_180(data: &[char]) -> Vec<char> {
+        let mut rotated_data = data.to_owned();
         rotated_data.reverse();
         rotated_data.to_vec()
     }
 
-    fn rotate_270(data: &Vec<char>, width: usize, height: usize) -> Vec<char> {
+    fn rotate_270(data: &[char], width: usize, height: usize) -> Vec<char> {
         let mut rotated_data = vec![' '; width * height];
         for y in 0..height {
             for x in 0..width {
-                rotated_data[(width - 1 - x) * height + y] =
-                    data[y * width + x];
+                rotated_data[(width - 1 - x) * height + y] = data[y * width + x];
             }
         }
         rotated_data
@@ -165,114 +162,15 @@ impl MarkovJunior {
         }
     }
 
-    fn apply_one_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
-        let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
-
-        if valid_patterns.is_empty() {
-            return false;
-        }
-
-        let total_weight: f32 = valid_patterns
-            .iter()
-            .map(|&(_, _, weight, _, _)| weight)
-            .sum();
-        let mut choice = rng.gen::<f32>() * total_weight;
-
-        for &(x, y, weight, pattern_index, subpattern_index) in &valid_patterns {
-            choice -= weight;
-            if choice <= 0.0 {
-                let output =
-                    self.rules[rule_index].patterns[pattern_index].output[subpattern_index].clone();
-                self.apply_pattern(x, y, &output);
-                return true;
-            }
-        }
-
-        false
-    }
-
-    fn apply_all_rule(&mut self, rule_index: usize) -> bool {
-        let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
-        let mut applied = false;
-
-        for &(x, y, _, pattern_index, subpattern_index) in &valid_patterns {
-            let output =
-                self.rules[rule_index].patterns[pattern_index].output[subpattern_index].clone();
-            self.apply_pattern(x, y, &output);
-            applied = true;
-        }
-
-        applied
-    }
-
-    fn apply_parallel_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
-        let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
-        let mut applied = false;
-        let mut changes = Vec::new();
-
-        for &(x, y, _, pattern_index, subpattern_index) in &valid_patterns {
-            if rng.gen_bool(0.5) {
-                let output =
-                    self.rules[rule_index].patterns[pattern_index].output[subpattern_index].clone();
-                changes.push((x, y, output));
-                applied = true;
-            }
-        }
-
-        for (x, y, output) in changes {
-            self.apply_pattern(x, y, &output);
-        }
-
-        applied
-    }
-
-    // #[cfg(feature = "parallel")]
-    // fn find_valid_patterns_for_rule(
-    //     &self,
-    //     rule_index: usize,
-    // ) -> Vec<(usize, usize, f32, usize, usize)> {
-    //     let rule = &self.rules[rule_index];
-    //
-    //     (0..self.height)
-    //         .into_par_iter()
-    //         .flat_map_iter(|y| {
-    //             (0..self.width).flat_map(move |x| {
-    //                 rule.patterns.iter().enumerate().flat_map(move |(pattern_index, pattern)| {
-    //                     pattern.inputs.iter().enumerate().filter_map(move |(subpattern_index, input)| {
-    //                         if self.pattern_fits(x, y, input) {
-    //                             Some((x, y, pattern.weight, pattern_index, subpattern_index))
-    //                         } else {
-    //                             None
-    //                         }
-    //                     })
-    //                 })
-    //             })
-    //         })
-    //         .collect()
-    // }
-
-    // #[cfg(not(feature = "parallel"))]
-    fn find_valid_patterns_for_rule(
-        &self,
-        rule_index: usize,
-    ) -> Vec<(usize, usize, f32, usize, usize)> {
+    fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize)> {
         let mut valid_patterns = Vec::new();
         let rule = &self.rules[rule_index];
 
         for y in 0..self.height {
             for x in 0..self.width {
-                'pattern: for (pattern_index, pattern) in rule.patterns.iter().enumerate() {
-                    for subpattern_index in 0..pattern.input.len() {
-                        if self.pattern_fits(x, y, &pattern.input[subpattern_index]) {
-                            valid_patterns.push((
-                                x,
-                                y,
-                                pattern.weight,
-                                pattern_index,
-                                subpattern_index,
-                            ));
-                            break 'pattern;
-                        }
+                for (pattern_index, pattern) in rule.patterns.iter().enumerate() {
+                    if self.pattern_fits(x, y, &pattern.input) {
+                        valid_patterns.push((x, y, pattern.weight, pattern_index));
                     }
                 }
             }
@@ -304,6 +202,67 @@ impl MarkovJunior {
         }
 
         true
+    }
+
+    fn apply_one_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
+        let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
+
+        if valid_patterns.is_empty() {
+            return false;
+        }
+
+        let total_weight: f32 = valid_patterns.iter().map(|&(_, _, weight, _)| weight).sum();
+        let mut choice = rng.gen::<f32>() * total_weight;
+
+        for &(x, y, weight, pattern_index) in &valid_patterns {
+            choice -= weight;
+            if choice <= 0.0 {
+                let output = self.rules[rule_index].patterns[pattern_index]
+                    .output
+                    .clone();
+                self.apply_pattern(x, y, &output);
+                return true;
+            }
+        }
+
+        false
+    }
+
+    fn apply_all_rule(&mut self, rule_index: usize) -> bool {
+        let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
+        let mut applied = false;
+
+        for &(x, y, _, pattern_index) in &valid_patterns {
+            let output = self.rules[rule_index].patterns[pattern_index]
+                .output
+                .clone();
+            self.apply_pattern(x, y, &output);
+            applied = true;
+        }
+
+        applied
+    }
+
+    fn apply_parallel_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
+        let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
+        let mut applied = false;
+        let mut changes = Vec::new();
+
+        for &(x, y, _, pattern_index) in &valid_patterns {
+            if rng.gen_bool(0.5) {
+                let output = self.rules[rule_index].patterns[pattern_index]
+                    .output
+                    .clone();
+                changes.push((x, y, output));
+                applied = true;
+            }
+        }
+
+        for (x, y, output) in changes {
+            self.apply_pattern(x, y, &output);
+        }
+
+        applied
     }
 
     fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern) {
