@@ -5,26 +5,16 @@ use rand::Rng;
 
 #[derive(Clone, Debug)]
 struct PatternRule {
-    inputs: [Pattern; 4],
-    outputs: [Pattern; 4],
+    input: Pattern,
+    output: Pattern,
     weight: f32,
 }
 
 impl PatternRule {
     pub fn new(input: Pattern, output: Pattern) -> PatternRule {
         PatternRule {
-            inputs: [
-                input.rotate_90(),
-                input.rotate_270(),
-                input.rotate_180(),
-                input,
-            ],
-            outputs: [
-                output.rotate_90(),
-                output.rotate_270(),
-                output.rotate_180(),
-                output,
-            ],
+            input,
+            output,
             weight: 1.0,
         }
     }
@@ -35,6 +25,8 @@ struct Pattern {
     data: Vec<char>,
     width: usize,
     height: usize,
+    canonical_form: Vec<char>,
+    rotation: usize, // 0, 1, 2, or 3 representing 0°, 90°, 180°, 270°
 }
 
 const PATTERN_DELIMITER: char = '/';
@@ -45,53 +37,59 @@ impl Pattern {
         let parts: Vec<&str> = line.split(PATTERN_DELIMITER).collect();
         let width = parts[0].len();
         let height = parts.len();
-        let data: Vec<char> = parts.join("").chars().collect();
+        let data = parts.join("").chars().collect::<Vec<char>>();
+        let (canonical_form, rotation) = Self::compute_canonical_form(&data, width, height);
 
         Pattern {
             data,
             width,
             height,
+            canonical_form,
+            rotation,
         }
     }
 
-    fn rotate_90(&self) -> Self {
-        let mut rotated_data = vec![' '; self.width * self.height];
-        for y in 0..self.height {
-            for x in 0..self.width {
-                rotated_data[x * self.height + (self.height - 1 - y)] =
-                    self.data[y * self.width + x];
+    fn compute_canonical_form(data: &Vec<char>, width: usize, height: usize) -> (Vec<char>, usize) {
+        let rotations = [
+            (data.to_vec(), 0),
+            (Self::rotate_90(data, width, height), 1),
+            (Self::rotate_180(data, width, height), 2),
+            (Self::rotate_270(data, width, height), 3),
+        ];
+
+        rotations
+            .into_iter()
+            .min_by_key(|(rotated_data, _)| rotated_data.iter().collect::<String>())
+            .map(|(rotated_data, rotation)| (rotated_data, rotation))
+            .unwrap()
+    }
+
+    fn rotate_90(data: &Vec<char>, width: usize, height: usize) -> Vec<char> {
+        let mut rotated_data = vec![' '; width * height];
+        for y in 0..height {
+            for x in 0..width {
+                rotated_data[x * height + (height - 1 - y)] =
+                    data[y * width + x];
             }
         }
-        Pattern {
-            data: rotated_data,
-            width: self.height,
-            height: self.width,
-        }
+        rotated_data
     }
 
-    fn rotate_180(&self) -> Self {
-        let mut rotated_data = self.data.clone();
+    fn rotate_180(data: &Vec<char>, _width: usize, _height: usize) -> Vec<char> {
+        let mut rotated_data = data.clone();
         rotated_data.reverse();
-        Pattern {
-            data: rotated_data,
-            width: self.width,
-            height: self.height,
-        }
+        rotated_data.to_vec()
     }
 
-    fn rotate_270(&self) -> Self {
-        let mut rotated_data = vec![' '; self.width * self.height];
-        for y in 0..self.height {
-            for x in 0..self.width {
-                rotated_data[(self.width - 1 - x) * self.height + y] =
-                    self.data[y * self.width + x];
+    fn rotate_270(data: &Vec<char>, width: usize, height: usize) -> Vec<char> {
+        let mut rotated_data = vec![' '; width * height];
+        for y in 0..height {
+            for x in 0..width {
+                rotated_data[(width - 1 - x) * height + y] =
+                    data[y * width + x];
             }
         }
-        Pattern {
-            data: rotated_data,
-            width: self.height,
-            height: self.width,
-        }
+        rotated_data
     }
 }
 
@@ -147,7 +145,9 @@ impl MarkovJunior {
         let mut rng = rand::thread_rng();
 
         for rule_index in 0..self.rules.len() {
-            let steps = self.rules[rule_index].steps.unwrap_or(self.width * self.height * 16);
+            let steps = self.rules[rule_index]
+                .steps
+                .unwrap_or(self.width * self.height * 16);
             let kind = self.rules[rule_index].kind;
 
             for _step in 0..steps {
@@ -181,9 +181,8 @@ impl MarkovJunior {
         for &(x, y, weight, pattern_index, subpattern_index) in &valid_patterns {
             choice -= weight;
             if choice <= 0.0 {
-                let output = self.rules[rule_index].patterns[pattern_index].outputs
-                    [subpattern_index]
-                    .clone();
+                let output =
+                    self.rules[rule_index].patterns[pattern_index].output[subpattern_index].clone();
                 self.apply_pattern(x, y, &output);
                 return true;
             }
@@ -198,7 +197,7 @@ impl MarkovJunior {
 
         for &(x, y, _, pattern_index, subpattern_index) in &valid_patterns {
             let output =
-                self.rules[rule_index].patterns[pattern_index].outputs[subpattern_index].clone();
+                self.rules[rule_index].patterns[pattern_index].output[subpattern_index].clone();
             self.apply_pattern(x, y, &output);
             applied = true;
         }
@@ -213,9 +212,8 @@ impl MarkovJunior {
 
         for &(x, y, _, pattern_index, subpattern_index) in &valid_patterns {
             if rng.gen_bool(0.5) {
-                let output = self.rules[rule_index].patterns[pattern_index].outputs
-                    [subpattern_index]
-                    .clone();
+                let output =
+                    self.rules[rule_index].patterns[pattern_index].output[subpattern_index].clone();
                 changes.push((x, y, output));
                 applied = true;
             }
@@ -264,8 +262,8 @@ impl MarkovJunior {
         for y in 0..self.height {
             for x in 0..self.width {
                 'pattern: for (pattern_index, pattern) in rule.patterns.iter().enumerate() {
-                    for subpattern_index in 0..pattern.inputs.len() {
-                        if self.pattern_fits(x, y, &pattern.inputs[subpattern_index]) {
+                    for subpattern_index in 0..pattern.input.len() {
+                        if self.pattern_fits(x, y, &pattern.input[subpattern_index]) {
                             valid_patterns.push((
                                 x,
                                 y,
