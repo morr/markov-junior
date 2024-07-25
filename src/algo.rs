@@ -146,6 +146,14 @@ impl Rule {
     }
 }
 
+pub struct PatternMatch {
+    pub x: usize,
+    pub y: usize,
+    pub weight: f32,
+    pub pattern_index: usize,
+    pub rotation: usize,
+}
+
 pub struct MarkovJunior {
     pub grid: Vec<u8>,
     pub width: usize,
@@ -230,15 +238,21 @@ impl MarkovJunior {
         }
     }
 
-    fn find_valid_patterns_for_rule(&self, rule_index: usize) -> Vec<(usize, usize, f32, usize)> {
+    fn match_patterns_for_rule(&self, rule_index: usize) -> Vec<PatternMatch> {
         let mut valid_patterns = Vec::new();
         let rule = &self.rules[rule_index];
 
         for y in 0..self.height {
             for x in 0..self.width {
-                for (pattern_index, pattern) in rule.patterns.iter().enumerate() {
-                    if self.pattern_fits(x, y, &pattern.input) {
-                        valid_patterns.push((x, y, pattern.weight, pattern_index));
+                for (pattern_index, pattern_rule) in rule.patterns.iter().enumerate() {
+                    if let Some(rotation) = self.pattern_fits_canonical(x, y, &pattern_rule.input) {
+                        valid_patterns.push(PatternMatch {
+                            x,
+                            y,
+                            weight: pattern_rule.weight,
+                            pattern_index,
+                            rotation,
+                        });
                     }
                 }
             }
@@ -246,6 +260,51 @@ impl MarkovJunior {
 
         valid_patterns
     }
+
+    fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<usize> {
+        return None;
+        // if x + pattern.width > self.width || y + pattern.height > self.height {
+        //     return None;
+        // }
+        //
+        // let (grid_canonical, grid_rotation) = Self::compute_cell_canonical_form(
+        //     &self.grid,
+        //     self.width,
+        //     self.height,
+        //     x,
+        //     y,
+        //     pattern.width,
+        //     pattern.height,
+        // );
+        //
+        // if grid_canonical == pattern.canonical_form {
+        //     Some((grid_rotation + 4 - pattern.rotation) % 4)
+        // } else {
+        //     None
+        // }
+    }
+
+    // fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<usize> {
+    //     if x + pattern.width > self.width || y + pattern.height > self.height {
+    //         return None;
+    //     }
+    //
+    //     let (grid_canonical, grid_rotation) = Self::compute_cell_canonical_form(
+    //         &self.grid,
+    //         self.width,
+    //         self.height,
+    //         x,
+    //         y,
+    //         pattern.width,
+    //         pattern.height,
+    //     );
+    //
+    //     if grid_canonical == pattern.canonical_form {
+    //         Some((grid_rotation + 4 - pattern.rotation) % 4)
+    //     } else {
+    //         None
+    //     }
+    // }
 
     fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
         // Ensure the pattern fits within the grid boundaries
@@ -273,21 +332,32 @@ impl MarkovJunior {
     }
 
     fn apply_one_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
-        let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
+        let valid_patterns = self.match_patterns_for_rule(rule_index);
 
         if valid_patterns.is_empty() {
             return false;
         }
 
-        let total_weight: f32 = valid_patterns.iter().map(|&(_, _, weight, _)| weight).sum();
+        let total_weight: f32 = valid_patterns
+            .iter()
+            .map(|pattern_match| pattern_match.weight)
+            .sum();
         let mut choice = rng.gen::<f32>() * total_weight;
 
-        for &(x, y, weight, pattern_index) in &valid_patterns {
+        for &PatternMatch {
+            x,
+            y,
+            weight,
+            pattern_index,
+            rotation: _,
+        } in &valid_patterns
+        {
             choice -= weight;
+
             if choice <= 0.0 {
-                let output = self.rules[rule_index].patterns[pattern_index]
-                    .output
-                    .clone();
+                let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
+                let output = pattern_rule.output.clone();
+
                 self.apply_pattern(x, y, &output);
                 return true;
             }
@@ -297,13 +367,20 @@ impl MarkovJunior {
     }
 
     fn apply_all_rule(&mut self, rule_index: usize) -> bool {
-        let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
+        let valid_patterns = self.match_patterns_for_rule(rule_index);
         let mut applied = false;
 
-        for &(x, y, _, pattern_index) in &valid_patterns {
-            let output = self.rules[rule_index].patterns[pattern_index]
-                .output
-                .clone();
+        for &PatternMatch {
+            x,
+            y,
+            pattern_index,
+            rotation: _,
+            ..
+        } in &valid_patterns
+        {
+            let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
+            let output = pattern_rule.output.clone();
+
             self.apply_pattern(x, y, &output);
             applied = true;
         }
@@ -312,15 +389,22 @@ impl MarkovJunior {
     }
 
     fn apply_parallel_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
-        let valid_patterns = self.find_valid_patterns_for_rule(rule_index);
+        let valid_patterns = self.match_patterns_for_rule(rule_index);
         let mut applied = false;
         let mut changes = Vec::new();
 
-        for &(x, y, _, pattern_index) in &valid_patterns {
+        for &PatternMatch {
+            x,
+            y,
+            pattern_index,
+            rotation: _,
+            ..
+        } in &valid_patterns
+        {
             if rng.gen_bool(0.5) {
-                let output = self.rules[rule_index].patterns[pattern_index]
-                    .output
-                    .clone();
+                let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
+                let output = pattern_rule.output.clone();
+
                 changes.push((x, y, output));
                 applied = true;
             }
