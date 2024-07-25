@@ -206,11 +206,14 @@ impl MarkovJunior {
                 continue;
             }
 
+            let mut canonical_key_forms: Vec<CanonicalForm> =
+                Vec::with_capacity(self.width * self.height);
+
             for y in 0..self.height {
                 for x in 0..self.width {
-                    let index = y * self.width + x;
+                    // let index = y * self.width + x;
 
-                    self.canonical_forms[index] = Self::compute_cell_canonical_form(
+                    canonical_key_forms.push(Self::compute_cell_canonical_form(
                         &self.grid,
                         self.width,
                         self.height,
@@ -218,9 +221,12 @@ impl MarkovJunior {
                         y,
                         canonical_key.0,
                         canonical_key.1,
-                    );
+                    ));
                 }
             }
+
+            self.canonical_forms
+                .insert(canonical_key, canonical_key_forms);
         }
     }
 
