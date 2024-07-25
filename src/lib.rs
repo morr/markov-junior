@@ -7,14 +7,14 @@ macro_rules! use_modules {
     };
 }
 
-macro_rules! expose_submodules {
-    ( $( $x:ident ),* ) => {
-        $(
-            mod $x;
-            pub use self::$x::*;
-        )*
-    };
-}
+// macro_rules! expose_submodules {
+//     ( $( $x:ident ),* ) => {
+//         $(
+//             mod $x;
+//             pub use self::$x::*;
+//         )*
+//     };
+// }
 
 use_modules!(
     algo,
