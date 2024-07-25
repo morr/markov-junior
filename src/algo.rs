@@ -1,3 +1,5 @@
+use std::collections::{HashMap};
+
 use rand::Rng;
 
 // #[cfg(feature = "parallel")]
@@ -8,14 +10,25 @@ pub struct PatternRule {
     pub input: Pattern,
     pub output: Pattern,
     pub weight: f32,
+    pub canonical_key: Option<(usize, usize)>,
 }
 
 impl PatternRule {
     pub fn new(input: Pattern, output: Pattern) -> PatternRule {
+        let canonical_key = (
+            std::cmp::max(input.width, input.height),
+            std::cmp::min(input.width, input.height),
+        );
+
         PatternRule {
             input,
             output,
             weight: 1.0,
+            canonical_key: if canonical_key.0 > 1 {
+                Some(canonical_key)
+            } else {
+                None
+            },
         }
     }
 }
@@ -49,7 +62,11 @@ impl Pattern {
         }
     }
 
-    pub fn compute_canonical_form(data: &[char], width: usize, height: usize) -> (Vec<char>, usize) {
+    pub fn compute_canonical_form(
+        data: &[char],
+        width: usize,
+        height: usize,
+    ) -> (Vec<char>, usize) {
         let rotations = [
             (data.to_vec(), 0),
             (Self::rotate_90(data, width, height), 1),
@@ -122,6 +139,7 @@ pub struct MarkovJunior {
     pub width: usize,
     pub height: usize,
     pub rules: Vec<Rule>,
+    pub canonical_forms: HashMap<(usize, usize), Vec<char>>,
 }
 
 impl MarkovJunior {
@@ -131,6 +149,7 @@ impl MarkovJunior {
             width,
             height,
             rules: Vec::new(),
+            canonical_forms: HashMap::new(),
         }
     }
 
