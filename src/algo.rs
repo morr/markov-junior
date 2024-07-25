@@ -262,74 +262,51 @@ impl MarkovJunior {
     }
 
     fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<usize> {
-        return None;
-        // if x + pattern.width > self.width || y + pattern.height > self.height {
-        //     return None;
-        // }
-        //
-        // let (grid_canonical, grid_rotation) = Self::compute_cell_canonical_form(
-        //     &self.grid,
-        //     self.width,
-        //     self.height,
-        //     x,
-        //     y,
-        //     pattern.width,
-        //     pattern.height,
-        // );
-        //
-        // if grid_canonical == pattern.canonical_form {
-        //     Some((grid_rotation + 4 - pattern.rotation) % 4)
-        // } else {
-        //     None
-        // }
-    }
-
-    // fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<usize> {
-    //     if x + pattern.width > self.width || y + pattern.height > self.height {
-    //         return None;
-    //     }
-    //
-    //     let (grid_canonical, grid_rotation) = Self::compute_cell_canonical_form(
-    //         &self.grid,
-    //         self.width,
-    //         self.height,
-    //         x,
-    //         y,
-    //         pattern.width,
-    //         pattern.height,
-    //     );
-    //
-    //     if grid_canonical == pattern.canonical_form {
-    //         Some((grid_rotation + 4 - pattern.rotation) % 4)
-    //     } else {
-    //         None
-    //     }
-    // }
-
-    fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
-        // Ensure the pattern fits within the grid boundaries
         if x + pattern.width > self.width || y + pattern.height > self.height {
-            return false;
+            return None;
         }
 
-        let pattern_data = &pattern.data;
-        let grid_width = self.width;
-        let grid = &self.grid;
+        let canonical_form = Self::compute_cell_canonical_form(
+            &self.grid,
+            self.width,
+            self.height,
+            x,
+            y,
+            pattern.width,
+            pattern.height,
+        );
 
-        for py in 0..pattern.height {
-            for px in 0..pattern.width {
-                let pattern_char = pattern_data[py * pattern.width + px];
-                if pattern_char != ANYTHING {
-                    let grid_char = grid[(y + py) * grid_width + (x + px)] as char;
-                    if pattern_char != grid_char {
-                        return false;
-                    }
-                }
-            }
+        if canonical_form.data == pattern.canonical_form.data {
+            Some((canonical_form.rotation + 4 - pattern.canonical_form.rotation) % 4)
+        } else {
+            None
         }
-
-        true
     }
+
+    // fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
+    //     // Ensure the pattern fits within the grid boundaries
+    //     if x + pattern.width > self.width || y + pattern.height > self.height {
+    //         return false;
+    //     }
+    //
+    //     let pattern_data = &pattern.data;
+    //     let grid_width = self.width;
+    //     let grid = &self.grid;
+    //
+    //     for py in 0..pattern.height {
+    //         for px in 0..pattern.width {
+    //             let pattern_char = pattern_data[py * pattern.width + px];
+    //             if pattern_char != ANYTHING {
+    //                 let grid_char = grid[(y + py) * grid_width + (x + px)] as char;
+    //                 if pattern_char != grid_char {
+    //                     return false;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     true
+    // }
 
     fn apply_one_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
         let valid_patterns = self.match_patterns_for_rule(rule_index);
@@ -349,7 +326,7 @@ impl MarkovJunior {
             y,
             weight,
             pattern_index,
-            rotation: _,
+            rotation,
         } in &valid_patterns
         {
             choice -= weight;
@@ -358,7 +335,7 @@ impl MarkovJunior {
                 let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
                 let output = pattern_rule.output.clone();
 
-                self.apply_pattern(x, y, &output);
+                self.apply_pattern(x, y, &output, rotation);
                 return true;
             }
         }
@@ -374,14 +351,14 @@ impl MarkovJunior {
             x,
             y,
             pattern_index,
-            rotation: _,
+            rotation,
             ..
         } in &valid_patterns
         {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
             let output = pattern_rule.output.clone();
 
-            self.apply_pattern(x, y, &output);
+            self.apply_pattern(x, y, &output, rotation);
             applied = true;
         }
 
@@ -397,7 +374,7 @@ impl MarkovJunior {
             x,
             y,
             pattern_index,
-            rotation: _,
+            rotation,
             ..
         } in &valid_patterns
         {
@@ -405,24 +382,50 @@ impl MarkovJunior {
                 let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
                 let output = pattern_rule.output.clone();
 
-                changes.push((x, y, output));
+                changes.push((x, y, output, rotation));
                 applied = true;
             }
         }
 
-        for (x, y, output) in changes {
-            self.apply_pattern(x, y, &output);
+        for (x, y, pattern, rotation) in changes {
+            self.apply_pattern(x, y, &pattern, rotation);
         }
 
         applied
     }
 
-    fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern) {
-        for (i, &pattern_char) in pattern.data.iter().enumerate() {
-            let px = i % pattern.width;
-            let py = i / pattern.width;
+    // fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern) {
+    //     for (i, &pattern_char) in pattern.data.iter().enumerate() {
+    //         let px = i % pattern.width;
+    //         let py = i / pattern.width;
+    //         if pattern_char != ANYTHING {
+    //             self.grid[(y + py) * self.width + (x + px)] = pattern_char as u8;
+    //         }
+    //     }
+    // }
+
+    fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: usize) {
+        let rotated_output = match rotation {
+            0 => pattern.data.clone(),
+            1 => Pattern::rotate_270(&pattern.data, pattern.width, pattern.height),
+            2 => Pattern::rotate_180(&pattern.data),
+            3 => Pattern::rotate_90(&pattern.data, pattern.width, pattern.height),
+            _ => unreachable!(),
+        };
+
+        let width = match rotation {
+            0 | 2 => pattern.width,
+            1 | 3 => pattern.height,
+            _ => unreachable!(),
+        };
+
+        for (i, &pattern_char) in rotated_output.iter().enumerate() {
+            let px = i % width;
+            let py = i / width;
             if pattern_char != ANYTHING {
-                self.grid[(y + py) * self.width + (x + px)] = pattern_char as u8;
+                let index = (y + py) * self.width + (x + px);
+                self.grid[index] = pattern_char as u8;
+                // self.update_canonical_form(x + px, y + py);
             }
         }
     }
