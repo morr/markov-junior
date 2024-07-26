@@ -44,7 +44,7 @@ pub struct Pattern {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct CanonicalForm {
     pub data: Vec<char>,
-    pub rotation: usize, // 0, 1, 2, or 3 representing 0°, 90°, 180°, 270°
+    pub rotation: usize, // 1, 2, 3, or 4 representing 0°, 90°, 180°, 270°
 }
 
 pub const PATTERN_DELIMITER: char = '/';
@@ -70,19 +70,19 @@ impl Pattern {
         let rotations = [
             CanonicalForm {
                 data: data.to_vec(),
-                rotation: 0,
-            },
-            CanonicalForm {
-                data: Self::rotate_90(data, width, height),
                 rotation: 1,
             },
             CanonicalForm {
-                data: Self::rotate_180(data),
+                data: Self::rotate_90(data, width, height),
                 rotation: 2,
             },
             CanonicalForm {
-                data: Self::rotate_270(data, width, height),
+                data: Self::rotate_180(data),
                 rotation: 3,
+            },
+            CanonicalForm {
+                data: Self::rotate_270(data, width, height),
+                rotation: 4,
             },
         ];
 
@@ -241,7 +241,9 @@ impl MarkovJunior {
         );
 
         if canonical_form.data == pattern.canonical_form.data {
-            Some((4 - pattern.canonical_form.rotation) % 4)
+            // Some((4 - pattern.canonical_form.rotation) % 4)
+            // Some((4 - (pattern.canonical_form.rotation - 1)) % 4 + 1)
+            Some((5 - pattern.canonical_form.rotation) % 4 + 1)
         } else {
             None
         }
@@ -355,16 +357,16 @@ impl MarkovJunior {
 
     pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: usize) {
         let rotated_output = match rotation {
-            0 => pattern.data.clone(),
-            1 => Pattern::rotate_90(&pattern.data, pattern.width, pattern.height),
-            2 => Pattern::rotate_180(&pattern.data),
-            3 => Pattern::rotate_270(&pattern.data, pattern.width, pattern.height),
+            1 => pattern.data.clone(),
+            2 => Pattern::rotate_90(&pattern.data, pattern.width, pattern.height),
+            3 => Pattern::rotate_180(&pattern.data),
+            4 => Pattern::rotate_270(&pattern.data, pattern.width, pattern.height),
             _ => unreachable!(),
         };
 
         let width = match rotation {
-            0 | 2 => pattern.width,
-            1 | 3 => pattern.height,
+            1 | 3 => pattern.width,
+            2 | 4 => pattern.height,
             _ => unreachable!(),
         };
 
