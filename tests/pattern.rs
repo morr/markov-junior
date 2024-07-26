@@ -60,3 +60,80 @@ fn test_rotate_270() {
     let rotated = Pattern::rotate_270(&data, 3, 2);
     assert_eq!(rotated, vec!['3', '6', '2', '5', '1', '4']);
 }
+
+#[test]
+fn test_compute_canonical_form_1x1() {
+    let data = vec!['A'];
+    let canonical_form = Pattern::compute_canonical_form(&data, 1, 1);
+    assert_eq!(canonical_form.data, vec!['A']);
+    assert_eq!(canonical_form.rotation, 0);
+}
+
+#[test]
+fn test_compute_canonical_form_2x2_no_rotation() {
+    let data = vec!['A', 'B', 'C', 'D'];
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(canonical_form.rotation, 0);
+}
+
+#[test]
+fn test_compute_canonical_form_2x2_90_rotation() {
+    let data = vec!['B', 'D', 'A', 'C'];
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(canonical_form.rotation, 1);
+}
+
+#[test]
+fn test_compute_canonical_form_2x2_180_rotation() {
+    let data = vec!['D', 'C', 'B', 'A'];
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(canonical_form.rotation, 2);
+}
+
+#[test]
+fn test_compute_canonical_form_2x2_270_rotation() {
+    let data = vec!['C', 'A', 'D', 'B'];
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(canonical_form.rotation, 3);
+}
+
+#[test]
+fn test_compute_canonical_form_3x3() {
+    let data = vec!['C', 'F', 'I', 'B', 'E', 'H', 'A', 'D', 'G'];
+    let canonical_form = Pattern::compute_canonical_form(&data, 3, 3);
+    assert_eq!(
+        canonical_form.data,
+        vec!['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+    );
+    assert_eq!(canonical_form.rotation, 1);
+}
+
+#[test]
+fn test_compute_canonical_form_2x3() {
+    let mut data = vec!['B', 'D', 'F', 'A', 'C', 'E'];
+    data.reverse();
+
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 3);
+    assert_eq!(canonical_form.data, vec!['B', 'D', 'F', 'A', 'C', 'E']);
+    assert_eq!(canonical_form.rotation, 2);
+}
+
+#[test]
+fn test_compute_canonical_form_with_repeated_characters() {
+    let data = vec!['A', 'A', 'B', 'B'];
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['A', 'A', 'B', 'B']);
+    assert_eq!(canonical_form.rotation, 0);
+}
+
+#[test]
+fn test_compute_canonical_form_with_wildcard() {
+    let data = vec!['*', 'B', 'C', 'D'];
+    let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
+    assert_eq!(canonical_form.data, vec!['*', 'B', 'C', 'D']);
+    assert_eq!(canonical_form.rotation, 0);
+}
