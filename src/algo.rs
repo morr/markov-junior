@@ -386,10 +386,10 @@ impl MarkovJunior {
         // );
 
         let from_x = x.saturating_sub(size - 1);
-        let to_x = x + size - 1;
+        let to_x = std::cmp::min(x + size - 1, self.width - 1);
 
         let from_y = y.saturating_sub(size - 1);
-        let to_y = y + size - 1;
+        let to_y = std::cmp::min(y + size - 1, self.height - 1);
 
         for pattern_index in 0..self.rules[rule_index].patterns.len() {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
