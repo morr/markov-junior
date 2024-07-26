@@ -15,20 +15,21 @@ pub struct PatternRule {
 
 impl PatternRule {
     pub fn new(input: Pattern, output: Pattern) -> PatternRule {
-        let canonical_key = (
-            std::cmp::max(input.width, input.height),
-            std::cmp::min(input.width, input.height),
-        );
+        let canonical_key = Self::calculate_canonical_key(input.width, input.height);
 
         PatternRule {
             input,
             output,
             weight: 1.0,
-            canonical_key: if canonical_key.0 > 1 {
-                Some(canonical_key)
-            } else {
-                None
-            },
+            canonical_key,
+        }
+    }
+
+    fn calculate_canonical_key(width: usize, height: usize) -> Option<(usize, usize)> {
+        if width == 1 && height == 1 {
+            None
+        } else {
+            Some((std::cmp::max(width, height), std::cmp::min(width, height)))
         }
     }
 }
