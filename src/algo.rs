@@ -272,9 +272,16 @@ impl MarkovJunior {
 
             if choice <= 0.0 {
                 let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
-                let output = pattern_rule.output.clone();
+                let pattern = pattern_rule.output.clone();
 
-                self.apply_pattern(x, y, &output, rotation, rule_index);
+                self.apply_pattern(x, y, &pattern, rotation);
+                self.update_canonical_forms(
+                    x,
+                    y,
+                    std::cmp::max(pattern.width, pattern.height),
+                    rule_index,
+                );
+
                 return true;
             }
         }
@@ -295,9 +302,16 @@ impl MarkovJunior {
         } in &valid_patterns
         {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
-            let output = pattern_rule.output.clone();
+            let pattern = pattern_rule.output.clone();
 
-            self.apply_pattern(x, y, &output, rotation, rule_index);
+            self.apply_pattern(x, y, &pattern, rotation);
+            self.update_canonical_forms(
+                x,
+                y,
+                std::cmp::max(pattern.width, pattern.height),
+                rule_index,
+            );
+
             applied = true;
         }
 
@@ -327,25 +341,24 @@ impl MarkovJunior {
         }
 
         for (x, y, pattern, rotation) in changes {
-            self.apply_pattern(x, y, &pattern, rotation, rule_index);
+            self.apply_pattern(x, y, &pattern, rotation);
+            self.update_canonical_forms(
+                x,
+                y,
+                std::cmp::max(pattern.width, pattern.height),
+                rule_index,
+            );
         }
 
         applied
     }
 
-    fn apply_pattern(
-        &mut self,
-        x: usize,
-        y: usize,
-        pattern: &Pattern,
-        rotation: usize,
-        rule_index: usize,
-    ) {
+    pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: usize) {
         let rotated_output = match rotation {
             0 => pattern.data.clone(),
-            1 => Pattern::rotate_270(&pattern.data, pattern.width, pattern.height),
+            1 => Pattern::rotate_90(&pattern.data, pattern.width, pattern.height),
             2 => Pattern::rotate_180(&pattern.data),
-            3 => Pattern::rotate_90(&pattern.data, pattern.width, pattern.height),
+            3 => Pattern::rotate_270(&pattern.data, pattern.width, pattern.height),
             _ => unreachable!(),
         };
 
@@ -364,17 +377,13 @@ impl MarkovJunior {
                 self.grid[index] = pattern_char as u8;
             }
         }
-
-        self.update_canonical_forms(
-            x,
-            y,
-            std::cmp::max(pattern.width, pattern.height),
-            rule_index,
-        );
     }
 
     fn update_canonical_forms(&mut self, x: usize, y: usize, size: usize, rule_index: usize) {
-        println!("update_canonical_forms x:{}, y:{}, size:{}, rule_index:{}", x, y, size, rule_index);
+        // println!(
+        //     "update_canonical_forms x:{}, y:{}, size:{}, rule_index:{}",
+        //     x, y, size, rule_index
+        // );
 
         let from_x = x.saturating_sub(size - 1);
         let to_x = x + size - 1;
@@ -396,7 +405,7 @@ impl MarkovJunior {
                 for dx in from_x..=to_x {
                     let index = dy * self.width + dx;
 
-                    println!("update_canonical_form {:?}/{:?}", canonical_key, index);
+                    // println!("update_canonical_form {:?}/{:?}", canonical_key, index);
                     self.canonical_forms.get_mut(&canonical_key).unwrap()[index] =
                         Self::compute_cell_canonical_form(
                             &self.grid,

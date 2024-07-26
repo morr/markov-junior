@@ -1,3 +1,4 @@
+#![feature(stmt_expr_attributes)]
 use std::collections::HashMap;
 
 use markov_junior::*;
@@ -39,4 +40,124 @@ fn test_pattern_fits_canonical() {
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_270), Some(3));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_270), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_270), None);
+}
+
+#[test]
+fn test_apply_pattern_no_rotation() {
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    let pattern = Pattern::new("AB/CD");
+
+    mj.apply_pattern(1, 1, &pattern, 0);
+
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip]
+        vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'A', b'B', b'.', b'.',
+            b'.', b'C', b'D', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+        ]
+    );
+}
+
+#[test]
+fn test_apply_pattern_90_degree_rotation() {
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    let pattern = Pattern::new("AB/CD");
+
+    mj.apply_pattern(1, 1, &pattern, 1);
+
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip]
+            vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'C', b'A', b'.', b'.',
+            b'.', b'D', b'B', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+        ]
+    );
+}
+
+#[test]
+fn test_apply_pattern_180_degree_rotation() {
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    let pattern = Pattern::new("AB/CD");
+
+    mj.apply_pattern(1, 1, &pattern, 2);
+
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip]
+            vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'D', b'C', b'.', b'.',
+            b'.', b'B', b'A', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+        ]
+    );
+}
+
+#[test]
+fn test_apply_pattern_270_degree_rotation() {
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    let pattern = Pattern::new("AB/CD");
+
+    mj.apply_pattern(1, 1, &pattern, 3);
+
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip]
+            vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'B', b'D', b'.', b'.',
+            b'.', b'A', b'C', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+        ]
+    );
+}
+
+#[test]
+fn test_apply_pattern_with_anything_symbol() {
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    let pattern = Pattern::new("A*/C*");
+
+    mj.apply_pattern(1, 1, &pattern, 0);
+
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip]
+            vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'A', b'.', b'.', b'.',
+            b'.', b'C', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+        ]
+    );
+}
+
+#[test]
+fn test_apply_pattern_at_edge() {
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    let pattern = Pattern::new("AB/CD");
+
+    mj.apply_pattern(3, 3, &pattern, 0);
+
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip]
+            vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'A', b'B',
+            b'.', b'.', b'.', b'C', b'D',
+        ]
+    );
 }
