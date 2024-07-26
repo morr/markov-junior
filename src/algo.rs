@@ -222,6 +222,8 @@ impl MarkovJunior {
             let kind = rule.kind;
 
             self.calculate_canonical_forms(rule_index);
+            println!("grid: {:?}", self.grid.clone().into_iter().map(|v| v as char).collect::<Vec<_>>());
+            println!("canonical_forms: {:?}", self.canonical_forms);
 
             for _step in 0..steps {
                 // println!("rule_index {rule_index} step {step}");
@@ -266,28 +268,35 @@ impl MarkovJunior {
             return None;
         }
 
-        let canonical_form = Self::compute_cell_canonical_form(
-            &self.grid,
-            self.width,
-            self.height,
-            x,
-            y,
-            pattern.width,
-            pattern.height,
-        );
+        match PatternRule::calculate_canonical_key(pattern.width, pattern.height) {
+            None => {
+                // For 1x1 patterns, perform a direct comparison
+                let grid_char = self.grid[y * self.width + x] as char;
+                if grid_char == pattern.data[0] || pattern.data[0] == ANYTHING {
+                    Some(1)
+                } else {
+                    None
+                }
+            }
+            Some(key) => {
+                let precalculated_forms = self
+                    .canonical_forms
+                    .get(&key)
+                    .expect("Canonical form should be precalculated for this key");
 
-        if canonical_form.data == pattern.canonical_form.data {
-            // Some((4 - pattern.canonical_form.rotation) % 4)
-            // Some((4 - (pattern.canonical_form.rotation - 1)) % 4 + 1)
-            // Some((5 - pattern.canonical_form.rotation) % 4 + 1)
-            Some(if pattern.canonical_form.rotation > 0 {
-                (5 - pattern.canonical_form.rotation) % 4 + 1
-            } else {
-                pattern.canonical_form.rotation
-                // (-5 - pattern.canonical_form.rotation) % 4 - 1
-            })
-        } else {
-            None
+                let index = y * self.width + x;
+                let grid_canonical_form = &precalculated_forms[index];
+
+                if grid_canonical_form.data == pattern.canonical_form.data {
+                    Some(if pattern.canonical_form.rotation > 0 {
+                        (5 - pattern.canonical_form.rotation) % 4 + 1
+                    } else {
+                        pattern.canonical_form.rotation
+                    })
+                } else {
+                    None
+                }
+            }
         }
     }
 
@@ -493,6 +502,7 @@ impl MarkovJunior {
     }
 
     fn calculate_canonical_forms(&mut self, rule_index: usize) {
+        println!("calculate_canonical_forms");
         for pattern_index in 0..self.rules[rule_index].patterns.len() {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
 
@@ -508,6 +518,7 @@ impl MarkovJunior {
 
             for y in 0..self.height {
                 for x in 0..self.width {
+                    println!("{x}/{y}");
                     // let index = y * self.width + x;
 
                     canonical_key_forms.push(Self::compute_cell_canonical_form(
