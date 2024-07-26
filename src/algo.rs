@@ -241,7 +241,7 @@ impl MarkovJunior {
         );
 
         if canonical_form.data == pattern.canonical_form.data {
-            Some((canonical_form.rotation + 4 - pattern.canonical_form.rotation) % 4)
+            Some((4 - pattern.canonical_form.rotation) % 4)
         } else {
             None
         }
