@@ -18,28 +18,44 @@ fn test_pattern_fits_canonical() {
     };
 
     let pattern = Pattern::new("AB/DE");
-
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern), Some(1));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern), None);
 
     let pattern_90 = Pattern::new("DA/EB");
-
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_90), Some(2));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_90), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_90), None);
 
     let pattern_180 = Pattern::new("ED/BA");
-
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_180), Some(3));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_180), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_180), None);
 
     let pattern_270 = Pattern::new("BE/AD");
-
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_270), Some(4));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_270), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_270), None);
+
+    let pattern_mirror = Pattern::new("BA/ED");
+    assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_mirror), Some(-1));
+    assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_mirror), None);
+    assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_mirror), None);
+
+    let pattern_mirror_90 = Pattern::new("EB/DA");
+    assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_mirror_90), Some(-2));
+    assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_mirror_90), None);
+    assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_mirror_90), None);
+
+    let pattern_mirror_180 = Pattern::new("DE/AB");
+    assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_mirror_180), Some(-3));
+    assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_mirror_180), None);
+    assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_mirror_180), None);
+
+    let pattern_mirror_270 = Pattern::new("AD/BE");
+    assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_mirror_270), Some(-4));
+    assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_mirror_270), None);
+    assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_mirror_270), None);
 }
 
 #[test]

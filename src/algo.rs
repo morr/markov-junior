@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cmp::Ordering, collections::HashMap};
 
 use rand::Rng;
 
@@ -44,7 +44,7 @@ pub struct Pattern {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct CanonicalForm {
     pub data: Vec<char>,
-    pub rotation: usize, // 1, 2, 3, or 4 representing 0°, 90°, 180°, 270°
+    pub rotation: isize, // 1, 2, 3, or 4 representing 0°, 90°, 180°, 270°, -1, -2, -3, or -4 representing mirrored 0°, 90°, 180°, 270°
 }
 
 pub const PATTERN_DELIMITER: char = '/';
@@ -84,12 +84,47 @@ impl Pattern {
                 data: Self::rotate_270(data, width, height),
                 rotation: 4,
             },
+            CanonicalForm {
+                data: Self::mirror(data, width),
+                rotation: -1,
+            },
+            CanonicalForm {
+                data: Self::rotate_90(&Self::mirror(data, width), width, height),
+                rotation: -2,
+            },
+            CanonicalForm {
+                data: Self::rotate_180(&Self::mirror(data, width)),
+                rotation: -3,
+            },
+            CanonicalForm {
+                data: Self::rotate_270(&Self::mirror(data, width), width, height),
+                rotation: -4,
+            },
         ];
 
         rotations
             .into_iter()
-            .min_by_key(|CanonicalForm { data, .. }| data.iter().collect::<String>())
+            .min_by(|a, b| {
+                let data_cmp = a
+                    .data
+                    .iter()
+                    .collect::<String>()
+                    .cmp(&b.data.iter().collect::<String>());
+                if data_cmp == Ordering::Equal {
+                    a.rotation.abs().cmp(&b.rotation.abs())
+                } else {
+                    data_cmp
+                }
+            })
             .unwrap()
+    }
+
+    pub fn mirror(data: &[char], width: usize) -> Vec<char> {
+        let mut mirrored = Vec::with_capacity(data.len());
+        for chunk in data.chunks(width) {
+            mirrored.extend(chunk.iter().rev());
+        }
+        mirrored
     }
 
     pub fn rotate_90(data: &[char], width: usize, height: usize) -> Vec<char> {
@@ -151,7 +186,7 @@ pub struct PatternMatch {
     pub y: usize,
     pub weight: f32,
     pub pattern_index: usize,
-    pub rotation: usize,
+    pub rotation: isize,
 }
 
 pub struct MarkovJunior {
@@ -225,7 +260,7 @@ impl MarkovJunior {
         valid_patterns
     }
 
-    pub fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<usize> {
+    pub fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<isize> {
         if x + pattern.width > self.width || y + pattern.height > self.height {
             return None;
         }
@@ -243,7 +278,13 @@ impl MarkovJunior {
         if canonical_form.data == pattern.canonical_form.data {
             // Some((4 - pattern.canonical_form.rotation) % 4)
             // Some((4 - (pattern.canonical_form.rotation - 1)) % 4 + 1)
-            Some((5 - pattern.canonical_form.rotation) % 4 + 1)
+            // Some((5 - pattern.canonical_form.rotation) % 4 + 1)
+            Some(if pattern.canonical_form.rotation > 0 {
+                (5 - pattern.canonical_form.rotation) % 4 + 1
+            } else {
+                pattern.canonical_form.rotation
+                // (-5 - pattern.canonical_form.rotation) % 4 - 1
+            })
         } else {
             None
         }
@@ -355,16 +396,43 @@ impl MarkovJunior {
         applied
     }
 
-    pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: usize) {
-        let rotated_output = match rotation {
-            1 => pattern.data.clone(),
-            2 => Pattern::rotate_90(&pattern.data, pattern.width, pattern.height),
-            3 => Pattern::rotate_180(&pattern.data),
-            4 => Pattern::rotate_270(&pattern.data, pattern.width, pattern.height),
+    pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
+        let rotated_output = match rotation.abs() {
+            1 => {
+                if rotation > 0 {
+                    pattern.data.clone()
+                } else {
+                    Pattern::mirror(&pattern.data, pattern.width)
+                }
+            }
+            2 => {
+                let data = if rotation > 0 {
+                    pattern.data.clone()
+                } else {
+                    Pattern::mirror(&pattern.data, pattern.width)
+                };
+                Pattern::rotate_90(&data, pattern.width, pattern.height)
+            }
+            3 => {
+                let data = if rotation > 0 {
+                    pattern.data.clone()
+                } else {
+                    Pattern::mirror(&pattern.data, pattern.width)
+                };
+                Pattern::rotate_180(&data)
+            }
+            4 => {
+                let data = if rotation > 0 {
+                    pattern.data.clone()
+                } else {
+                    Pattern::mirror(&pattern.data, pattern.width)
+                };
+                Pattern::rotate_270(&data, pattern.width, pattern.height)
+            }
             _ => unreachable!(),
         };
 
-        let width = match rotation {
+        let width = match rotation.abs() {
             1 | 3 => pattern.width,
             2 | 4 => pattern.height,
             _ => unreachable!(),
