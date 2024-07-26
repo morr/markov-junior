@@ -51,8 +51,7 @@ fn test_apply_pattern_no_rotation() {
 
     assert_eq!(
         mj.grid,
-        #[rustfmt::skip]
-        vec![
+        #[rustfmt::skip] vec![
             b'.', b'.', b'.', b'.', b'.',
             b'.', b'A', b'B', b'.', b'.',
             b'.', b'C', b'D', b'.', b'.',
@@ -71,8 +70,7 @@ fn test_apply_pattern_90_degree_rotation() {
 
     assert_eq!(
         mj.grid,
-        #[rustfmt::skip]
-            vec![
+        #[rustfmt::skip] vec![
             b'.', b'.', b'.', b'.', b'.',
             b'.', b'C', b'A', b'.', b'.',
             b'.', b'D', b'B', b'.', b'.',
@@ -91,8 +89,7 @@ fn test_apply_pattern_180_degree_rotation() {
 
     assert_eq!(
         mj.grid,
-        #[rustfmt::skip]
-            vec![
+        #[rustfmt::skip] vec![
             b'.', b'.', b'.', b'.', b'.',
             b'.', b'D', b'C', b'.', b'.',
             b'.', b'B', b'A', b'.', b'.',
@@ -111,8 +108,7 @@ fn test_apply_pattern_270_degree_rotation() {
 
     assert_eq!(
         mj.grid,
-        #[rustfmt::skip]
-            vec![
+        #[rustfmt::skip] vec![
             b'.', b'.', b'.', b'.', b'.',
             b'.', b'B', b'D', b'.', b'.',
             b'.', b'A', b'C', b'.', b'.',
@@ -131,8 +127,7 @@ fn test_apply_pattern_with_anything_symbol() {
 
     assert_eq!(
         mj.grid,
-        #[rustfmt::skip]
-            vec![
+        #[rustfmt::skip] vec![
             b'.', b'.', b'.', b'.', b'.',
             b'.', b'A', b'.', b'.', b'.',
             b'.', b'C', b'.', b'.', b'.',
@@ -151,8 +146,7 @@ fn test_apply_pattern_at_edge() {
 
     assert_eq!(
         mj.grid,
-        #[rustfmt::skip]
-            vec![
+        #[rustfmt::skip] vec![
             b'.', b'.', b'.', b'.', b'.',
             b'.', b'.', b'.', b'.', b'.',
             b'.', b'.', b'.', b'.', b'.',
@@ -161,3 +155,59 @@ fn test_apply_pattern_at_edge() {
         ]
     );
 }
+
+#[test]
+fn test_apply_pattern() {
+    let mut mj = MarkovJunior::new('.', 3, 3);
+    mj.grid = #[rustfmt::skip] vec![
+        b'B', b'W', b'G',
+        b'B', b'W', b'G',
+        b'B', b'W', b'G'
+    ];
+
+    let pattern_rule = PatternRule::new(Pattern::new("BW"), Pattern::new("WW"));
+
+    let rule = Rule::new(RuleKind::All, vec![pattern_rule], None);
+    mj.add_rule(rule);
+
+    // Apply the rule
+    mj.generate();
+
+    // Check the result
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip] vec![
+            b'W', b'W', b'G',
+            b'W', b'W', b'G',
+            b'W', b'W', b'G'
+        ]
+    );
+}
+
+// #[test]
+// fn test_apply_pattern_rotated() {
+//     let mut mj = MarkovJunior::new('.', 3, 3);
+//     mj.grid = #[rustfmt::skip] vec![
+//         b'B', b'B', b'B',
+//         b'W', b'W', b'W',
+//         b'G', b'G', b'G'
+//     ];
+//
+//     let pattern_rule = PatternRule::new(Pattern::new("BW"), Pattern::new("WW"));
+//
+//     let rule = Rule::new(RuleKind::All, vec![pattern_rule], None);
+//     mj.add_rule(rule);
+//
+//     // Apply the rule
+//     mj.generate();
+//
+//     // Check the result
+//     assert_eq!(
+//         mj.grid,
+//         #[rustfmt::skip] vec![
+//             b'W', b'W', b'W',
+//             b'W', b'W', b'W',
+//             b'G', b'G', b'G',
+//         ]
+//     );
+// }
