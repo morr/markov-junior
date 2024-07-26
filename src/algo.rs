@@ -50,6 +50,7 @@ pub struct CanonicalForm {
 
 pub const PATTERN_DELIMITER: char = '/';
 pub const ANYTHING: char = '*';
+pub const NOTHING: char = '❌';
 
 impl Pattern {
     pub fn new(line: &str) -> Self {
@@ -564,7 +565,7 @@ impl MarkovJunior {
                 if gx < width && gy < height {
                     data.push(grid[gy * width + gx] as char);
                 } else {
-                    data.push(' ');
+                    data.push(NOTHING);
                 }
             }
         }
