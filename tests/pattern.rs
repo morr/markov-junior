@@ -14,7 +14,7 @@ fn test_pattern() {
     );
     assert_eq!(
         pattern.canonical_form,
-        CanonicalForm {
+        RotatedData {
             data: #[rustfmt::skip] vec![
                 'G', 'W',
                 ANYTHING, ANYTHING
@@ -33,11 +33,14 @@ fn test_pattern() {
     );
 
     assert_eq!(
-        pattern.canonical_form_2.unwrap().data,
-        #[rustfmt::skip] vec![
-            'G', ANYTHING,
-            'W', ANYTHING
-        ]
+        pattern.canonical_form_2.unwrap(),
+        RotatedData {
+            data: #[rustfmt::skip] vec![
+                'G', ANYTHING,
+                'W', ANYTHING
+            ],
+            rotation: 1
+        }
     );
 }
 

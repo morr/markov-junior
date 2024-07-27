@@ -32,7 +32,7 @@ impl PatternRule {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub struct CanonicalForm {
+pub struct RotatedData {
     pub data: Vec<char>,
     pub rotation: isize, // 1, 2, 3, or 4 representing 0°, 90°, 180°, 270°, -1, -2, -3, or -4 representing mirrored 0°, 90°, 180°, 270°
 }
@@ -57,8 +57,9 @@ pub struct Pattern {
     pub data: Vec<char>,
     pub width: usize,
     pub height: usize,
-    pub canonical_form: CanonicalForm,
-    pub canonical_form_2: Option<CanonicalForm>,
+    pub rotations: Vec<RotatedData>,
+    pub canonical_form: RotatedData,
+    pub canonical_form_2: Option<RotatedData>,
 }
 
 impl Pattern {
@@ -76,7 +77,7 @@ impl Pattern {
             }
         }
 
-        let canonical_form = Self::compute_canonical_form(&data, square_size, square_size);
+        let (canonical_form, rotations) = Self::compute_canonical_form(&data, square_size, square_size);
         let canonical_form_2 = if original_width != original_height {
             Some(Self::compute_canonical_form_mirrored(
                 &canonical_form.data,
@@ -91,49 +92,51 @@ impl Pattern {
             data,
             width: square_size,
             height: square_size,
+            rotations,
             canonical_form,
             canonical_form_2,
         }
     }
 
-    pub fn compute_canonical_form(data: &[char], width: usize, height: usize) -> CanonicalForm {
-        let rotations = [
-            CanonicalForm {
+    pub fn compute_canonical_form(data: &[char], width: usize, height: usize) -> (RotatedData, Vec<RotatedData>) {
+        let rotations = vec![
+            RotatedData {
                 data: data.to_vec(),
                 rotation: 1,
             },
-            CanonicalForm {
+            RotatedData {
                 data: Self::rotate_90(data, width, height),
                 rotation: 2,
             },
-            CanonicalForm {
+            RotatedData {
                 data: Self::rotate_180(data),
                 rotation: 3,
             },
-            CanonicalForm {
+            RotatedData {
                 data: Self::rotate_270(data, width, height),
                 rotation: 4,
             },
-            CanonicalForm {
+            RotatedData {
                 data: Self::mirror(data, width),
                 rotation: -1,
             },
-            CanonicalForm {
+            RotatedData {
                 data: Self::rotate_90(&Self::mirror(data, width), width, height),
                 rotation: -2,
             },
-            CanonicalForm {
+            RotatedData {
                 data: Self::rotate_180(&Self::mirror(data, width)),
                 rotation: -3,
             },
-            CanonicalForm {
+            RotatedData {
                 data: Self::rotate_270(&Self::mirror(data, width), width, height),
                 rotation: -4,
             },
         ];
+        // println!("{:?}", rotations);
 
-        rotations
-            .into_iter()
+        let canonical_form = rotations
+            .iter()
             .min_by(|a, b| {
                 let data_cmp = a
                     .data
@@ -147,14 +150,17 @@ impl Pattern {
                 }
             })
             .unwrap()
+            .clone();
+
+        (canonical_form, rotations)
     }
 
     pub fn compute_canonical_form_mirrored(
         data: &[char],
         width: usize,
         _height: usize,
-    ) -> CanonicalForm {
-        CanonicalForm {
+    ) -> RotatedData {
+        RotatedData {
             data: Self::mirror(&Self::rotate_90(data, width, width), width),
             rotation: 0,
         }

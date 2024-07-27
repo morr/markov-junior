@@ -10,7 +10,7 @@ pub struct MarkovJunior {
     pub width: usize,
     pub height: usize,
     pub rules: Vec<Rule>,
-    pub canonical_forms: HashMap<(usize, usize), Vec<CanonicalForm>>,
+    pub canonical_forms: HashMap<(usize, usize), Vec<RotatedData>>,
 }
 
 impl MarkovJunior {
@@ -320,7 +320,7 @@ impl MarkovJunior {
                 continue;
             }
 
-            let mut canonical_key_forms: Vec<CanonicalForm> =
+            let mut canonical_key_forms: Vec<RotatedData> =
                 Vec::with_capacity(self.width * self.height);
 
             for y in 0..self.height {
@@ -362,7 +362,7 @@ impl MarkovJunior {
         y: usize,
         pattern_width: usize,
         pattern_height: usize,
-    ) -> CanonicalForm {
+    ) -> RotatedData {
         let mut data = Vec::with_capacity(pattern_width * pattern_height);
         for py in 0..pattern_height {
             for px in 0..pattern_width {
@@ -375,6 +375,6 @@ impl MarkovJunior {
                 }
             }
         }
-        Pattern::compute_canonical_form(&data, pattern_width, pattern_height)
+        Pattern::compute_canonical_form(&data, pattern_width, pattern_height).0
     }
 }
