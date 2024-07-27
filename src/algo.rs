@@ -37,19 +37,19 @@ impl MarkovJunior {
             let kind = rule.kind;
 
             self.calculate_canonical_forms(rule_index);
-            self.print_grid();
-            println!("canonical_forms: {:?}", self.canonical_forms);
+            // self.print_grid();
+            // println!("canonical_forms: {:?}", self.canonical_forms);
 
             for _step in 0..steps {
-                println!("\nrule_index {rule_index} step {_step}");
+                // println!("\nrule_index {rule_index} step {_step}");
                 let any_change = match kind {
                     RuleKind::One => self.apply_one_rule(&mut rng, rule_index),
                     RuleKind::All => self.apply_all_rule(rule_index),
                     RuleKind::Parallel => self.apply_parallel_rule(&mut rng, rule_index),
                 };
 
-                println!("any_change: {any_change}");
-                self.print_grid();
+                // println!("any_change: {any_change}");
+                // self.print_grid();
                 // println!("canonical_forms: {:?}", self.canonical_forms);
 
                 if !any_change {
@@ -105,14 +105,10 @@ impl MarkovJunior {
 
                 let index = y * self.width + x;
                 let grid_canonical_form = &precalculated_forms[index];
-                println!("pattern: {:?}", pattern);
+                // println!("pattern: {:?}", pattern);
 
                 if self.compare_canonical_forms(&grid_canonical_form.data, &pattern.canonical_form.data) {
-                    Some(if pattern.canonical_form.rotation > 0 {
-                        (5 - pattern.canonical_form.rotation) % 4 + 1
-                    } else {
-                        pattern.canonical_form.rotation
-                    })
+                    Some(pattern.canonical_form.rotation)
                 } else {
                     None
                 }
