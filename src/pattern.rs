@@ -25,7 +25,8 @@ impl PatternRule {
         if width == 1 && height == 1 {
             None
         } else {
-            Some((std::cmp::max(width, height), std::cmp::min(width, height)))
+            let size = std::cmp::max(width, height);
+            Some((size, size))
         }
     }
 }
@@ -57,6 +58,7 @@ pub struct Pattern {
     pub width: usize,
     pub height: usize,
     pub canonical_form: CanonicalForm,
+    pub canonical_form_2: Option<CanonicalForm>,
 }
 
 impl Pattern {
@@ -75,12 +77,22 @@ impl Pattern {
         }
 
         let canonical_form = Self::compute_canonical_form(&data, square_size, square_size);
+        let canonical_form_2 = if original_width != original_height {
+            Some(Self::compute_canonical_form_mirrored(
+                &canonical_form.data,
+                square_size,
+                square_size,
+            ))
+        } else {
+            None
+        };
 
         Pattern {
             data,
             width: square_size,
             height: square_size,
             canonical_form,
+            canonical_form_2,
         }
     }
 
@@ -135,6 +147,17 @@ impl Pattern {
                 }
             })
             .unwrap()
+    }
+
+    pub fn compute_canonical_form_mirrored(
+        data: &[char],
+        width: usize,
+        _height: usize,
+    ) -> CanonicalForm {
+        CanonicalForm {
+            data: Self::mirror(&Self::rotate_90(data, width, width), width),
+            rotation: 0,
+        }
     }
 
     pub fn mirror(data: &[char], width: usize) -> Vec<char> {

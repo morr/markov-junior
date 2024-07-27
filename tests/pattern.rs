@@ -6,6 +6,23 @@ fn test_pattern() {
     let pattern = Pattern::new("WG");
     assert_ne!(pattern.data, pattern.canonical_form.data);
     assert_eq!(
+        pattern.data,
+        #[rustfmt::skip] vec![
+            'W', 'G',
+            ANYTHING, ANYTHING
+        ]
+    );
+    assert_eq!(
+        pattern.canonical_form,
+        CanonicalForm {
+            data: #[rustfmt::skip] vec![
+                'G', 'W',
+                ANYTHING, ANYTHING
+            ],
+            rotation: -1
+        }
+    );
+    assert_eq!(
         Pattern::apply_rotation(
             &pattern.canonical_form.data,
             pattern.width,
@@ -13,6 +30,14 @@ fn test_pattern() {
             pattern.canonical_form.rotation
         ),
         pattern.data
+    );
+
+    assert_eq!(
+        pattern.canonical_form_2.unwrap().data,
+        #[rustfmt::skip] vec![
+            'G', ANYTHING,
+            'W', ANYTHING
+        ]
     );
 }
 
