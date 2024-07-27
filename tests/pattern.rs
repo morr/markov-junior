@@ -1,3 +1,4 @@
+#![feature(stmt_expr_attributes)]
 use markov_junior::*;
 
 #[test]
@@ -18,7 +19,72 @@ fn test_pattern() {
 #[test]
 fn test_start_converted_to_u8_max_so_it_sorted_to_the_bottom() {
     let pattern = Pattern::new("W*");
-    assert_eq!(pattern.data, vec![b'W' as char, u8::MAX as char, u8::MAX as char, u8::MAX as char]);
+    assert_eq!(
+        pattern.data,
+        #[rustfmt::skip] vec![
+            'W', ANYTHING,
+            ANYTHING, ANYTHING
+        ]
+    );
+}
+
+#[test]
+fn test_non_square_pattern() {
+    let pattern = Pattern::new("AB/CD/EF");
+    assert_eq!(pattern.width, 3);
+    assert_eq!(pattern.height, 3);
+    assert_eq!(
+        pattern.data,
+        #[rustfmt::skip] vec![
+            'A', 'B', ANYTHING,
+            'C', 'D', ANYTHING,
+            'E', 'F', ANYTHING
+        ]
+    );
+}
+
+#[test]
+fn test_wide_pattern() {
+    let pattern = Pattern::new("ABC");
+    assert_eq!(pattern.width, 3);
+    assert_eq!(pattern.height, 3);
+    assert_eq!(
+        pattern.data,
+        #[rustfmt::skip] vec![
+            'A', 'B', 'C',
+            ANYTHING, ANYTHING, ANYTHING,
+            ANYTHING, ANYTHING, ANYTHING
+        ]
+    );
+}
+
+#[test]
+fn test_tall_pattern() {
+    let pattern = Pattern::new("A/B/C");
+    assert_eq!(pattern.width, 3);
+    assert_eq!(pattern.height, 3);
+    assert_eq!(
+        pattern.data,
+        #[rustfmt::skip] vec![
+            'A', ANYTHING, ANYTHING,
+            'B', ANYTHING, ANYTHING,
+            'C', ANYTHING, ANYTHING
+        ]
+    );
+}
+
+#[test]
+fn test_pattern_with_anything_input() {
+    let pattern = Pattern::new("A*/C*");
+    assert_eq!(pattern.width, 2);
+    assert_eq!(pattern.height, 2);
+    assert_eq!(
+        pattern.data,
+        #[rustfmt::skip] vec![
+            'A', ANYTHING,
+            'C', ANYTHING
+        ]
+    );
 }
 
 #[test]
