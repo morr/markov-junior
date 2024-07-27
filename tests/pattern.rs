@@ -18,7 +18,7 @@ fn test_pattern() {
 #[test]
 fn test_start_converted_to_u8_max_so_it_sorted_to_the_bottom() {
     let pattern = Pattern::new("W*");
-    assert_eq!(pattern.data, vec![b'W' as char, u8::MAX as char]);
+    assert_eq!(pattern.data, vec![b'W' as char, u8::MAX as char, u8::MAX as char, u8::MAX as char]);
 }
 
 #[test]

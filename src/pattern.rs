@@ -62,19 +62,24 @@ pub struct Pattern {
 impl Pattern {
     pub fn new(line: &str) -> Self {
         let parts: Vec<&str> = line.split(PATTERN_DELIMITER).collect();
-        let width = parts[0].len();
-        let height = parts.len();
-        let data = parts
-            .join("")
-            .chars()
-            .map(|c| if c == ANYTHING_INPUT { ANYTHING } else { c })
-            .collect::<Vec<char>>();
-        let canonical_form = Self::compute_canonical_form(&data, width, height);
+        let original_width = parts[0].len();
+        let original_height = parts.len();
+        let square_size = std::cmp::max(original_width, original_height);
+
+        let mut data = vec![ANYTHING; square_size * square_size];
+
+        for (y, part) in parts.iter().enumerate() {
+            for (x, c) in part.chars().enumerate() {
+                data[y * square_size + x] = if c == ANYTHING_INPUT { ANYTHING } else { c };
+            }
+        }
+
+        let canonical_form = Self::compute_canonical_form(&data, square_size, square_size);
 
         Pattern {
             data,
-            width,
-            height,
+            width: square_size,
+            height: square_size,
             canonical_form,
         }
     }
