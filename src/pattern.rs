@@ -159,4 +159,41 @@ impl Pattern {
         }
         rotated_data
     }
+
+    pub fn apply_rotation(data: &[char], width: usize, height: usize, rotation: isize) -> Vec<char> {
+        match rotation.abs() {
+            1 => {
+                if rotation > 0 {
+                    data.to_vec()
+                } else {
+                    Self::mirror(data, width)
+                }
+            }
+            2 => {
+                let data = if rotation > 0 {
+                    data.to_vec()
+                } else {
+                    Self::mirror(data, width)
+                };
+                Self::rotate_90(&data, width, height)
+            }
+            3 => {
+                let data = if rotation > 0 {
+                    data.to_vec()
+                } else {
+                    Self::mirror(data, width)
+                };
+                Self::rotate_180(&data)
+            }
+            4 => {
+                let data = if rotation > 0 {
+                    data.to_vec()
+                } else {
+                    Self::mirror(data, width)
+                };
+                Self::rotate_270(&data, width, height)
+            }
+            _ => unreachable!(),
+        }
+    }
 }

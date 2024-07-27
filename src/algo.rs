@@ -237,46 +237,14 @@ impl MarkovJunior {
     }
 
     pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
-        let rotated_output = match rotation.abs() {
-            1 => {
-                if rotation > 0 {
-                    pattern.data.clone()
-                } else {
-                    Pattern::mirror(&pattern.data, pattern.width)
-                }
-            }
-            2 => {
-                let data = if rotation > 0 {
-                    pattern.data.clone()
-                } else {
-                    Pattern::mirror(&pattern.data, pattern.width)
-                };
-                Pattern::rotate_90(&data, pattern.width, pattern.height)
-            }
-            3 => {
-                let data = if rotation > 0 {
-                    pattern.data.clone()
-                } else {
-                    Pattern::mirror(&pattern.data, pattern.width)
-                };
-                Pattern::rotate_180(&data)
-            }
-            4 => {
-                let data = if rotation > 0 {
-                    pattern.data.clone()
-                } else {
-                    Pattern::mirror(&pattern.data, pattern.width)
-                };
-                Pattern::rotate_270(&data, pattern.width, pattern.height)
-            }
-            _ => unreachable!(),
-        };
-
+        let rotated_output = Pattern::apply_rotation(&pattern.canonical_form.data, pattern.width, pattern.height, rotation);
         let width = match rotation.abs() {
             1 | 3 => pattern.width,
             2 | 4 => pattern.height,
             _ => unreachable!(),
         };
+
+        println!("rotated_output: {:?}, rotation:{rotation}", rotated_output);
 
         for (i, &pattern_char) in rotated_output.iter().enumerate() {
             let px = i % width;

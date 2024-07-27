@@ -288,14 +288,7 @@ fn test_generate() {
         kind: RuleKind::One,
         steps: None,
     });
-    // mj.add_rule(Rule {
-    //     patterns: vec![PatternRule::new(Pattern::new("WG"), Pattern::new("WR"))],
-    //     kind: RuleKind::One,
-    //     steps: None,
-    // });
-
     mj.generate();
-    // mj.print_grid();
 
     assert_eq!(
         mj.grid,
@@ -322,7 +315,6 @@ fn test_generate_2() {
         steps: None,
     });
     mj.generate();
-    // mj.print_grid();
 
     assert_eq!(
         mj.grid,
@@ -330,6 +322,35 @@ fn test_generate_2() {
             b'B', b'W', b'R',
             b'B', b'W', b'R',
             b'B', b'W', b'R'
+        ]
+    );
+}
+
+#[test]
+fn test_generate_3() {
+    let mut mj = MarkovJunior::new('.', 3, 3);
+    mj.grid = #[rustfmt::skip] vec![
+        b'B', b'W', b'G',
+        b'B', b'W', b'G',
+        b'B', b'W', b'G'
+    ];
+    mj.add_rule(Rule {
+        patterns: vec![PatternRule::new(Pattern::new("BW"), Pattern::new("WW"))],
+        kind: RuleKind::One,
+        steps: None,
+    });
+    mj.add_rule(Rule {
+        patterns: vec![PatternRule::new(Pattern::new("WG"), Pattern::new("WR"))],
+        kind: RuleKind::One,
+        steps: None,
+    });
+    mj.generate();
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip] vec![
+            b'W', b'W', b'R',
+            b'W', b'W', b'R',
+            b'W', b'W', b'R'
         ]
     );
 }

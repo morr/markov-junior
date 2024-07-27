@@ -1,6 +1,59 @@
 use markov_junior::*;
 
 #[test]
+fn test_pattern() {
+    let pattern = Pattern::new("WG");
+    assert_ne!(pattern.data, pattern.canonical_form.data);
+    assert_eq!(
+        Pattern::apply_rotation(
+            &pattern.canonical_form.data,
+            pattern.width,
+            pattern.height,
+            pattern.canonical_form.rotation
+        ),
+        pattern.data
+    );
+}
+
+#[test]
+fn test_rotations() {
+    let data = vec!['A', 'B', 'C', 'D'];
+    let rotated = Pattern::rotate_90(&data, 2, 2);
+    assert_eq!(rotated, vec!['C', 'A', 'D', 'B']);
+
+    let data = vec!['1', '2', '3', '4', '5', '6'];
+    let rotated = Pattern::rotate_90(&data, 3, 2);
+    assert_eq!(rotated, vec!['4', '1', '5', '2', '6', '3']);
+
+    let data = vec!['A', 'B', 'C', 'D'];
+    let rotated = Pattern::rotate_180(&data);
+    assert_eq!(rotated, vec!['D', 'C', 'B', 'A']);
+
+    let data = vec!['1', '2', '3', '4', '5', '6'];
+    let rotated = Pattern::rotate_180(&data);
+    assert_eq!(rotated, vec!['6', '5', '4', '3', '2', '1']);
+
+    let data = vec!['A', 'B', 'C', 'D'];
+    let rotated = Pattern::rotate_270(&data, 2, 2);
+    assert_eq!(rotated, vec!['B', 'D', 'A', 'C']);
+
+    let data = vec!['1', '2', '3', '4', '5', '6'];
+    let rotated = Pattern::rotate_270(&data, 3, 2);
+    assert_eq!(rotated, vec!['3', '6', '2', '5', '1', '4']);
+}
+
+#[test]
+fn test_mirror() {
+    let data = vec!['A', 'B', 'C', 'D'];
+    let mirrored = Pattern::mirror(&data, 2);
+    assert_eq!(mirrored, vec!['B', 'A', 'D', 'C']);
+
+    let data = vec!['1', '2', '3', '4', '5', '6'];
+    let mirrored = Pattern::mirror(&data, 3);
+    assert_eq!(mirrored, vec!['3', '2', '1', '6', '5', '4']);
+}
+
+#[test]
 fn test_compute_canonical_form() {
     let data = vec!['A', 'B', 'C', 'D'];
     let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
@@ -29,17 +82,6 @@ fn test_compute_canonical_form() {
 }
 
 #[test]
-fn test_mirror() {
-    let data = vec!['A', 'B', 'C', 'D'];
-    let mirrored = Pattern::mirror(&data, 2);
-    assert_eq!(mirrored, vec!['B', 'A', 'D', 'C']);
-
-    let data = vec!['1', '2', '3', '4', '5', '6'];
-    let mirrored = Pattern::mirror(&data, 3);
-    assert_eq!(mirrored, vec!['3', '2', '1', '6', '5', '4']);
-}
-
-#[test]
 fn test_compute_canonical_form_with_mirror() {
     let data = vec!['B', 'A', 'D', 'C'];
     let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
@@ -50,39 +92,6 @@ fn test_compute_canonical_form_with_mirror() {
     let canonical_form = Pattern::compute_canonical_form(&data, 2, 2);
     assert_eq!(canonical_form.data, vec!['A', 'B', 'C', 'D']);
     assert_eq!(canonical_form.rotation, -3);
-}
-
-#[test]
-fn test_rotate_90() {
-    let data = vec!['A', 'B', 'C', 'D'];
-    let rotated = Pattern::rotate_90(&data, 2, 2);
-    assert_eq!(rotated, vec!['C', 'A', 'D', 'B']);
-
-    let data = vec!['1', '2', '3', '4', '5', '6'];
-    let rotated = Pattern::rotate_90(&data, 3, 2);
-    assert_eq!(rotated, vec!['4', '1', '5', '2', '6', '3']);
-}
-
-#[test]
-fn test_rotate_180() {
-    let data = vec!['A', 'B', 'C', 'D'];
-    let rotated = Pattern::rotate_180(&data);
-    assert_eq!(rotated, vec!['D', 'C', 'B', 'A']);
-
-    let data = vec!['1', '2', '3', '4', '5', '6'];
-    let rotated = Pattern::rotate_180(&data);
-    assert_eq!(rotated, vec!['6', '5', '4', '3', '2', '1']);
-}
-
-#[test]
-fn test_rotate_270() {
-    let data = vec!['A', 'B', 'C', 'D'];
-    let rotated = Pattern::rotate_270(&data, 2, 2);
-    assert_eq!(rotated, vec!['B', 'D', 'A', 'C']);
-
-    let data = vec!['1', '2', '3', '4', '5', '6'];
-    let rotated = Pattern::rotate_270(&data, 3, 2);
-    assert_eq!(rotated, vec!['3', '6', '2', '5', '1', '4']);
 }
 
 #[test]
