@@ -181,44 +181,81 @@ fn test_apply_pattern() {
     );
 }
 
-// #[test]
-// fn test_apply_pattern_with_anything_symbol() {
-//     let mut mj = MarkovJunior::new('.', 5, 5);
-//     let pattern = Pattern::new("A*/C*");
-//
-//     mj.apply_pattern(1, 1, &pattern, 2);
-//     // mj.print_grid();
-//
-//     assert_eq!(
-//         mj.grid,
-//         #[rustfmt::skip] vec![
-//             b'.', b'.', b'.', b'.', b'.',
-//             b'.', b'.', b'A', b'.', b'.',
-//             b'.', b'.', b'C', b'.', b'.',
-//             b'.', b'.', b'.', b'.', b'.',
-//             b'.', b'.', b'.', b'.', b'.',
-//         ]
-//     );
-// }
+#[test]
+fn test_apply_pattern_with_anything_symbol() {
+    let pattern = Pattern::new("A*/C*");
 
-// #[test]
-// fn test_apply_pattern_at_edge() {
-//     let mut mj = MarkovJunior::new('.', 5, 5);
-//     let pattern = Pattern::new("AB/CD");
-//
-//     mj.apply_pattern(3, 3, &pattern, 1);
-//
-//     assert_eq!(
-//         mj.grid,
-//         #[rustfmt::skip] vec![
-//             b'.', b'.', b'.', b'.', b'.',
-//             b'.', b'.', b'.', b'.', b'.',
-//             b'.', b'.', b'.', b'.', b'.',
-//             b'.', b'.', b'.', b'A', b'B',
-//             b'.', b'.', b'.', b'C', b'D',
-//         ]
-//     );
-// }
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    mj.apply_pattern(1, 1, &pattern, 1);
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip] vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'A', b'C', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+        ]
+    );
+
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    mj.apply_pattern(1, 1, &pattern, 2);
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip] vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'C', b'.', b'.', b'.',
+            b'.', b'A', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+        ]
+    );
+
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    mj.apply_pattern(1, 1, &pattern, 3);
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip] vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'C', b'A', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+        ]
+    );
+
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    mj.apply_pattern(1, 1, &pattern, 4);
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip] vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'A', b'.', b'.',
+            b'.', b'.', b'C', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+        ]
+    );
+}
+
+#[test]
+fn test_apply_pattern_at_edge() {
+    let mut mj = MarkovJunior::new('.', 5, 5);
+    let pattern = Pattern::new("AB/CD");
+
+    mj.apply_pattern(3, 3, &pattern, 1);
+
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip] vec![
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'.', b'.',
+            b'.', b'.', b'.', b'A', b'B',
+            b'.', b'.', b'.', b'C', b'D',
+        ]
+    );
+}
 //
 // // #[test]
 // // fn test_apply_2x1_pattern() {
