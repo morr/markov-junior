@@ -48,6 +48,15 @@ pub struct CanonicalForm {
     pub rotation: isize, // 1, 2, 3, or 4 representing 0°, 90°, 180°, 270°, -1, -2, -3, or -4 representing mirrored 0°, 90°, 180°, 270°
 }
 
+#[derive(Debug)]
+pub struct PatternMatch {
+    pub x: usize,
+    pub y: usize,
+    pub weight: f32,
+    pub pattern_index: usize,
+    pub rotation: isize,
+}
+
 pub const PATTERN_DELIMITER: char = '/';
 pub const ANYTHING: char = '*';
 pub const NOTHING: char = '❌';
@@ -183,14 +192,6 @@ impl Rule {
     }
 }
 
-pub struct PatternMatch {
-    pub x: usize,
-    pub y: usize,
-    pub weight: f32,
-    pub pattern_index: usize,
-    pub rotation: isize,
-}
-
 pub struct MarkovJunior {
     pub grid: Vec<u8>,
     pub width: usize,
@@ -223,16 +224,28 @@ impl MarkovJunior {
             let kind = rule.kind;
 
             self.calculate_canonical_forms(rule_index);
-            println!("grid: {:?}", self.grid.clone().into_iter().map(|v| v as char).collect::<Vec<_>>());
+            // println!(
+            //     "grid: {:?}",
+            //     self.grid
+            //         .clone()
+            //         .into_iter()
+            //         .map(|v| v as char)
+            //         .collect::<Vec<_>>()
+            // );
+            self.print_grid();
             println!("canonical_forms: {:?}", self.canonical_forms);
 
             for _step in 0..steps {
-                // println!("rule_index {rule_index} step {step}");
+                println!("\nrule_index {rule_index} step {_step}");
                 let any_change = match kind {
                     RuleKind::One => self.apply_one_rule(&mut rng, rule_index),
                     RuleKind::All => self.apply_all_rule(rule_index),
                     RuleKind::Parallel => self.apply_parallel_rule(&mut rng, rule_index),
                 };
+
+                println!("any_change: {any_change}");
+                // self.print_grid();
+                println!("canonical_forms: {:?}", self.canonical_forms);
 
                 if !any_change {
                     break;
@@ -303,6 +316,7 @@ impl MarkovJunior {
 
     fn apply_one_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
         let valid_patterns = self.match_patterns_for_rule(rule_index);
+        println!("valid_patterns: {:?}", valid_patterns);
 
         if valid_patterns.is_empty() {
             return false;
@@ -328,7 +342,9 @@ impl MarkovJunior {
                 let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
                 let pattern = pattern_rule.output.clone();
 
+                println!("apply_pattern({x},{y},{:?},{rotation})", pattern);
                 self.apply_pattern(x, y, &pattern, rotation);
+                self.print_grid();
                 self.update_canonical_forms(
                     x,
                     y,
@@ -461,16 +477,19 @@ impl MarkovJunior {
     }
 
     fn update_canonical_forms(&mut self, x: usize, y: usize, size: usize, rule_index: usize) {
-        // println!(
-        //     "update_canonical_forms x:{}, y:{}, size:{}, rule_index:{}",
-        //     x, y, size, rule_index
-        // );
-
         let from_x = x.saturating_sub(size - 1);
         let to_x = std::cmp::min(x + size - 1, self.width - 1);
 
         let from_y = y.saturating_sub(size - 1);
         let to_y = std::cmp::min(y + size - 1, self.height - 1);
+
+        println!(
+            "update_canonical_forms x:{x}, y:{y}, size:{size}, rule_index:{rule_index}, x_range:{:?}, y_range:{:?}, width:{}, height:{}",
+            from_x..=to_x,
+            from_y..=to_y,
+            self.width,
+            self.height,
+        );
 
         for pattern_index in 0..self.rules[rule_index].patterns.len() {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
@@ -524,7 +543,7 @@ impl MarkovJunior {
 
             for y in 0..self.height {
                 for x in 0..self.width {
-                    println!("{x}/{y}");
+                    // println!("{x}/{y}");
                     // let index = y * self.width + x;
 
                     canonical_key_forms.push(Self::compute_cell_canonical_form(
