@@ -7,9 +7,21 @@ fn create_test_grid(data: &str) -> Vec<u8> {
     data.chars().map(|c| c as u8).collect()
 }
 
+fn set_pattern(mj: &mut MarkovJunior, line: &str) -> Pattern {
+    let pattern = Pattern::new(line);
+    mj.add_rule(Rule {
+        patterns: vec![PatternRule::new(pattern.clone(), pattern.clone())],
+        kind: RuleKind::One,
+        steps: None,
+    });
+    mj.calculate_canonical_forms(0);
+
+    pattern
+}
+
 #[test]
 fn test_pattern_fits_canonical() {
-    let mj = MarkovJunior {
+    let mut mj = MarkovJunior {
         grid: create_test_grid("ABCDEFGHI"),
         width: 3,
         height: 3,
@@ -17,32 +29,32 @@ fn test_pattern_fits_canonical() {
         canonical_forms: HashMap::new(),
     };
 
-    let pattern = Pattern::new("AB/DE");
+    let pattern = set_pattern(&mut mj, "AB/DE");
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern), Some(1));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern), None);
 
-    let pattern_90 = Pattern::new("DA/EB");
+    let pattern_90 = set_pattern(&mut mj, "DA/EB");
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_90), Some(2));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_90), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_90), None);
 
-    let pattern_180 = Pattern::new("ED/BA");
+    let pattern_180 = set_pattern(&mut mj, "ED/BA");
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_180), Some(3));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_180), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_180), None);
 
-    let pattern_270 = Pattern::new("BE/AD");
+    let pattern_270 = set_pattern(&mut mj, "BE/AD");
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_270), Some(4));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_270), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_270), None);
 
-    let pattern_mirror = Pattern::new("BA/ED");
+    let pattern_mirror = set_pattern(&mut mj, "BA/ED");
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_mirror), Some(-1));
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_mirror), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_mirror), None);
 
-    let pattern_mirror_90 = Pattern::new("EB/DA");
+    let pattern_mirror_90 = set_pattern(&mut mj, "EB/DA");
     assert_eq!(
         mj.pattern_fits_canonical(0, 0, &pattern_mirror_90),
         Some(-2)
@@ -50,7 +62,7 @@ fn test_pattern_fits_canonical() {
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_mirror_90), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_mirror_90), None);
 
-    let pattern_mirror_180 = Pattern::new("DE/AB");
+    let pattern_mirror_180 = set_pattern(&mut mj, "DE/AB");
     assert_eq!(
         mj.pattern_fits_canonical(0, 0, &pattern_mirror_180),
         Some(-3)
@@ -58,7 +70,7 @@ fn test_pattern_fits_canonical() {
     assert_eq!(mj.pattern_fits_canonical(1, 0, &pattern_mirror_180), None);
     assert_eq!(mj.pattern_fits_canonical(0, 1, &pattern_mirror_180), None);
 
-    let pattern_mirror_270 = Pattern::new("AD/BE");
+    let pattern_mirror_270 = set_pattern(&mut mj, "AD/BE");
     assert_eq!(
         mj.pattern_fits_canonical(0, 0, &pattern_mirror_270),
         Some(-4)
@@ -271,18 +283,20 @@ fn test_generate() {
         b'B', b'W', b'G',
         b'B', b'W', b'G'
     ];
-
     mj.add_rule(Rule {
         patterns: vec![PatternRule::new(Pattern::new("BW"), Pattern::new("WW"))],
         kind: RuleKind::One,
         steps: None,
     });
+    // mj.add_rule(Rule {
+    //     patterns: vec![PatternRule::new(Pattern::new("WG"), Pattern::new("WR"))],
+    //     kind: RuleKind::One,
+    //     steps: None,
+    // });
 
-    // Apply the rule
     mj.generate();
-    mj.print_grid();
+    // mj.print_grid();
 
-    // Check the result
     assert_eq!(
         mj.grid,
         #[rustfmt::skip] vec![
@@ -292,3 +306,30 @@ fn test_generate() {
         ]
     );
 }
+
+// #[test]
+// fn test_generate_2() {
+//     let mut mj = MarkovJunior::new('.', 3, 3);
+//     mj.grid = #[rustfmt::skip] vec![
+//         b'B', b'W', b'G',
+//         b'B', b'W', b'G',
+//         b'B', b'W', b'G'
+//     ];
+//
+//     mj.add_rule(Rule {
+//         patterns: vec![PatternRule::new(Pattern::new("WG"), Pattern::new("WR"))],
+//         kind: RuleKind::One,
+//         steps: None,
+//     });
+//     mj.generate();
+//     // mj.print_grid();
+//
+//     assert_eq!(
+//         mj.grid,
+//         #[rustfmt::skip] vec![
+//             b'B', b'W', b'R',
+//             b'B', b'W', b'R',
+//             b'B', b'W', b'R'
+//         ]
+//     );
+// }

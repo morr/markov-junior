@@ -34,13 +34,6 @@ impl PatternRule {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub struct Pattern {
-    pub data: Vec<char>,
-    pub width: usize,
-    pub height: usize,
-    pub canonical_form: CanonicalForm,
-}
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct CanonicalForm {
@@ -60,6 +53,14 @@ pub struct PatternMatch {
 pub const PATTERN_DELIMITER: char = '/';
 pub const ANYTHING: char = '*';
 pub const NOTHING: char = '❌';
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub struct Pattern {
+    pub data: Vec<char>,
+    pub width: usize,
+    pub height: usize,
+    pub canonical_form: CanonicalForm,
+}
 
 impl Pattern {
     pub fn new(line: &str) -> Self {
@@ -526,7 +527,7 @@ impl MarkovJunior {
         }
     }
 
-    fn calculate_canonical_forms(&mut self, rule_index: usize) {
+    pub fn calculate_canonical_forms(&mut self, rule_index: usize) {
         println!("calculate_canonical_forms");
         for pattern_index in 0..self.rules[rule_index].patterns.len() {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
