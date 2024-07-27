@@ -486,17 +486,22 @@ impl MarkovJunior {
                 for dx in from_x..=to_x {
                     let index = dy * self.width + dx;
 
-                    // println!("update_canonical_form {:?}/{:?}", canonical_key, index);
                     self.canonical_forms.get_mut(&canonical_key).unwrap()[index] =
                         Self::compute_cell_canonical_form(
                             &self.grid,
                             self.width,
                             self.height,
-                            x,
-                            y,
+                            dx,
+                            dy,
                             canonical_key.0,
                             canonical_key.1,
                         );
+                    println!(
+                        "update_canonical_form {:?}/{:?}: {:?}",
+                        canonical_key,
+                        index,
+                        self.canonical_forms.get(&canonical_key).unwrap()[index]
+                    );
                 }
             }
         }
