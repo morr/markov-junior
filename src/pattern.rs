@@ -32,7 +32,7 @@ impl PatternRule {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub struct RotatedData {
+pub struct RotatedSeq {
     pub data: Vec<char>,
     pub rotation: isize, // 1, 2, 3, or 4 representing 0°, 90°, 180°, 270°, -1, -2, -3, or -4 representing mirrored 0°, 90°, 180°, 270°
 }
@@ -57,9 +57,9 @@ pub struct Pattern {
     pub data: Vec<char>,
     pub width: usize,
     pub height: usize,
-    pub rotations: Vec<RotatedData>,
-    pub canonical_form: RotatedData,
-    pub canonical_form_2: Option<RotatedData>,
+    pub rotations: Vec<RotatedSeq>,
+    pub canonical_form: RotatedSeq,
+    pub canonical_form_2: Option<RotatedSeq>,
 }
 
 impl Pattern {
@@ -105,37 +105,37 @@ impl Pattern {
         data: &[char],
         width: usize,
         height: usize,
-    ) -> (RotatedData, Vec<RotatedData>) {
+    ) -> (RotatedSeq, Vec<RotatedSeq>) {
         let rotations = vec![
-            RotatedData {
+            RotatedSeq {
                 data: data.to_vec(),
                 rotation: 1,
             },
-            RotatedData {
+            RotatedSeq {
                 data: Self::rotate_90(data, width, height),
                 rotation: 2,
             },
-            RotatedData {
+            RotatedSeq {
                 data: Self::rotate_180(data),
                 rotation: 3,
             },
-            RotatedData {
+            RotatedSeq {
                 data: Self::rotate_270(data, width, height),
                 rotation: 4,
             },
-            RotatedData {
+            RotatedSeq {
                 data: Self::mirror(data, width),
                 rotation: -1,
             },
-            RotatedData {
+            RotatedSeq {
                 data: Self::rotate_90(&Self::mirror(data, width), width, height),
                 rotation: -2,
             },
-            RotatedData {
+            RotatedSeq {
                 data: Self::rotate_180(&Self::mirror(data, width)),
                 rotation: -3,
             },
-            RotatedData {
+            RotatedSeq {
                 data: Self::rotate_270(&Self::mirror(data, width), width, height),
                 rotation: -4,
             },
@@ -166,8 +166,8 @@ impl Pattern {
         data: &[char],
         width: usize,
         _height: usize,
-        rotations: &[RotatedData],
-    ) -> RotatedData {
+        rotations: &[RotatedSeq],
+    ) -> RotatedSeq {
         let data = Self::mirror(&Self::rotate_90(data, width, width), width);
         let rotation = rotations
             .iter()
@@ -175,7 +175,7 @@ impl Pattern {
             .unwrap()
             .rotation;
 
-        RotatedData { data, rotation }
+        RotatedSeq { data, rotation }
     }
 
     pub fn mirror(data: &[char], width: usize) -> Vec<char> {

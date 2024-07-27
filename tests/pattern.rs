@@ -14,7 +14,7 @@ fn test_pattern() {
     );
     assert_eq!(
         pattern.canonical_form,
-        RotatedData {
+        RotatedSeq {
             data: #[rustfmt::skip] vec![
                 'G', 'W',
                 ANYTHING, ANYTHING
@@ -58,7 +58,7 @@ fn test_canonical_form_2() {
     let canonical_form_2 = pattern.canonical_form_2.unwrap();
     assert_eq!(
         canonical_form_2,
-        RotatedData {
+        RotatedSeq {
             data: #[rustfmt::skip] vec![
                 'G', ANYTHING,
                 'W', ANYTHING
