@@ -46,7 +46,9 @@ pub struct PatternMatch {
 }
 
 pub const PATTERN_DELIMITER: char = '/';
-pub const ANYTHING: char = '*';
+// pub const ANYTHING: char = '*';
+pub const ANYTHING_INPUT: char = '*';
+pub const ANYTHING: char = u8::MAX as char; // the value is set to make it to be sorted to the bottom
 pub const NOTHING: char = '❌';
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -62,7 +64,11 @@ impl Pattern {
         let parts: Vec<&str> = line.split(PATTERN_DELIMITER).collect();
         let width = parts[0].len();
         let height = parts.len();
-        let data = parts.join("").chars().collect::<Vec<char>>();
+        let data = parts
+            .join("")
+            .chars()
+            .map(|c| if c == ANYTHING_INPUT { ANYTHING } else { c })
+            .collect::<Vec<char>>();
         let canonical_form = Self::compute_canonical_form(&data, width, height);
 
         Pattern {
@@ -160,7 +166,12 @@ impl Pattern {
         rotated_data
     }
 
-    pub fn apply_rotation(data: &[char], width: usize, height: usize, rotation: isize) -> Vec<char> {
+    pub fn apply_rotation(
+        data: &[char],
+        width: usize,
+        height: usize,
+        rotation: isize,
+    ) -> Vec<char> {
         match rotation.abs() {
             1 => {
                 if rotation > 0 {
