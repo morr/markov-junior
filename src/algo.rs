@@ -238,7 +238,7 @@ impl MarkovJunior {
     }
 
     pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
-        let rotated_output = Pattern::apply_rotation(&pattern.canonical_form.data, pattern.width, pattern.height, rotation);
+        let rotated_output = Pattern::rollback_rotation(&pattern.canonical_form.data, pattern.width, pattern.height, rotation);
         let width = match rotation.abs() {
             1 | 3 => pattern.width,
             2 | 4 => pattern.height,

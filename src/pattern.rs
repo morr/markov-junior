@@ -77,12 +77,15 @@ impl Pattern {
             }
         }
 
-        let (canonical_form, rotations) = Self::compute_canonical_form(&data, square_size, square_size);
+        let (canonical_form, rotations) =
+            Self::compute_canonical_form(&data, square_size, square_size);
+
         let canonical_form_2 = if original_width != original_height {
             Some(Self::compute_canonical_form_mirrored(
                 &canonical_form.data,
                 square_size,
                 square_size,
+                &rotations,
             ))
         } else {
             None
@@ -98,7 +101,11 @@ impl Pattern {
         }
     }
 
-    pub fn compute_canonical_form(data: &[char], width: usize, height: usize) -> (RotatedData, Vec<RotatedData>) {
+    pub fn compute_canonical_form(
+        data: &[char],
+        width: usize,
+        height: usize,
+    ) -> (RotatedData, Vec<RotatedData>) {
         let rotations = vec![
             RotatedData {
                 data: data.to_vec(),
@@ -159,11 +166,16 @@ impl Pattern {
         data: &[char],
         width: usize,
         _height: usize,
+        rotations: &[RotatedData],
     ) -> RotatedData {
-        RotatedData {
-            data: Self::mirror(&Self::rotate_90(data, width, width), width),
-            rotation: 0,
-        }
+        let data = Self::mirror(&Self::rotate_90(data, width, width), width);
+        let rotation = rotations
+            .iter()
+            .find(|rotated| rotated.data == data)
+            .unwrap()
+            .rotation;
+
+        RotatedData { data, rotation }
     }
 
     pub fn mirror(data: &[char], width: usize) -> Vec<char> {
@@ -200,44 +212,21 @@ impl Pattern {
         rotated_data
     }
 
-    pub fn apply_rotation(
+    pub fn rollback_rotation(
         data: &[char],
         width: usize,
         height: usize,
         rotation: isize,
     ) -> Vec<char> {
-        match rotation.abs() {
-            1 => {
-                if rotation > 0 {
-                    data.to_vec()
-                } else {
-                    Self::mirror(data, width)
-                }
-            }
-            2 => {
-                let data = if rotation > 0 {
-                    data.to_vec()
-                } else {
-                    Self::mirror(data, width)
-                };
-                Self::rotate_90(&data, width, height)
-            }
-            3 => {
-                let data = if rotation > 0 {
-                    data.to_vec()
-                } else {
-                    Self::mirror(data, width)
-                };
-                Self::rotate_180(&data)
-            }
-            4 => {
-                let data = if rotation > 0 {
-                    data.to_vec()
-                } else {
-                    Self::mirror(data, width)
-                };
-                Self::rotate_270(&data, width, height)
-            }
+        match rotation {
+            -4 => Self::mirror(&Self::rotate_90(data, width, height), width),
+            -3 => Self::mirror(&Self::rotate_180(data), width),
+            -2 => Self::mirror(&Self::rotate_270(data, width, height), width),
+            -1 => Self::mirror(data, width),
+            1 => data.to_vec(),
+            2 => Self::rotate_270(data, width, height),
+            3 => Self::rotate_180(data),
+            4 => Self::rotate_90(data, width, height),
             _ => unreachable!(),
         }
     }
