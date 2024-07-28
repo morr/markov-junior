@@ -122,6 +122,11 @@ impl MarkovJunior {
     }
 
     fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> Option<isize> {
+        // ensure pattern definitely fits within the grid boundaries
+        if x + pattern.width > self.width || y + pattern.height > self.height {
+            return None;
+        }
+
         let grid_width = self.width;
         let grid = &self.grid;
 
