@@ -122,20 +122,20 @@ impl MarkovJunior {
     }
 
     fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> Option<isize> {
-        // ensure pattern definitely fits within the grid boundaries
-        if x + pattern.width > self.width || y + pattern.height > self.height {
-            return None;
-        }
-
         let grid_width = self.width;
         let grid = &self.grid;
 
         'rotated_seq: for rotated_seq in pattern.unique_rotations.iter() {
             let pattern_data = &rotated_seq.data;
 
+            // ensure pattern definitely fits within the grid boundaries
+            if x + rotated_seq.width > self.width || y + rotated_seq.height > self.height {
+                return None;
+            }
+
             for py in 0..pattern.height {
                 for px in 0..pattern.width {
-                    let pattern_char = pattern_data[py * pattern.width + px];
+                    let pattern_char = pattern_data[py * rotated_seq.width + px];
                     if pattern_char != ANYTHING {
                         let grid_char = grid[(y + py) * grid_width + (x + px)] as char;
                         if pattern_char != grid_char {
