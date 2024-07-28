@@ -59,6 +59,7 @@ pub struct Pattern {
     pub rotations: Vec<RotatedSeq>,
     pub unique_rotations: Vec<RotatedSeq>,
     pub canonical_form: Option<RotatedSeq>,
+    pub has_wildcards: bool
 }
 
 impl Pattern {
@@ -68,8 +69,9 @@ impl Pattern {
         let height = parts.len();
         let data = parts.join("").chars().collect::<Vec<char>>();
 
+        let has_wildcards = data.iter().any(|&char| char == ANYTHING);
         let (maybe_canonical_form, rotations, unique_rotations) =
-            Self::compute_canonical_form_and_rotations(&data, width, height);
+            Self::compute_canonical_form_and_rotations(&data, width, height, has_wildcards);
 
         Pattern {
             data,
@@ -78,6 +80,7 @@ impl Pattern {
             rotations,
             unique_rotations,
             canonical_form: maybe_canonical_form,
+            has_wildcards
         }
     }
 
@@ -85,8 +88,8 @@ impl Pattern {
         data: &[char],
         width: usize,
         height: usize,
+        has_wildcards: bool
     ) -> (Option<RotatedSeq>, Vec<RotatedSeq>, Vec<RotatedSeq>) {
-        let has_wildcards = data.iter().any(|&char| char == ANYTHING);
         if width == 1 && height == 1 {
             let rotation = RotatedSeq {
                 data: data.to_vec(),

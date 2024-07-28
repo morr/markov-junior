@@ -439,7 +439,7 @@ impl MarkovJunior {
                 }
             }
         }
-        Pattern::compute_canonical_form_and_rotations(&data, pattern_width, pattern_height)
+        Pattern::compute_canonical_form_and_rotations(&data, pattern_width, pattern_height, false)
             .0
             .unwrap()
     }
