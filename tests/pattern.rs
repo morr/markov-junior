@@ -57,31 +57,30 @@ fn test_rollback_rotation() {
     }
 }
 
+#[test]
+fn test_non_square_pattern_2x1() {
+    let pattern = Pattern::new("AB");
+    assert_eq!(pattern.width, 2);
+    assert_eq!(pattern.height, 1);
+    assert_eq!(pattern.data, vec!['A', 'B']);
+    assert_eq!(pattern.rotations.len(), 8);
+    assert_eq!(pattern.unique_rotations.len(), 4);
+}
+
 // #[test]
-// fn test_start_converted_to_u8_max_so_it_sorted_to_the_bottom() {
-//     let pattern = Pattern::new("W*");
-//     assert_eq!(
-//         pattern.data,
-//         #[rustfmt::skip] vec![
-//             'W', ANYTHING,
-//             ANYTHING, ANYTHING
-//         ]
-//     );
-// }
-//
-// #[test]
-// fn test_non_square_pattern() {
+// fn test_non_square_pattern_2x3() {
 //     let pattern = Pattern::new("AB/CD/EF");
-//     assert_eq!(pattern.width, 3);
+//     assert_eq!(pattern.width, 2);
 //     assert_eq!(pattern.height, 3);
 //     assert_eq!(
 //         pattern.data,
 //         #[rustfmt::skip] vec![
-//             'A', 'B', ANYTHING,
-//             'C', 'D', ANYTHING,
-//             'E', 'F', ANYTHING
+//             'A', 'B',
+//             'C', 'D',
+//             'E', 'F',
 //         ]
 //     );
+//     assert_eq!(pattern.rotations.len(), 1);
 // }
 //
 // #[test]
