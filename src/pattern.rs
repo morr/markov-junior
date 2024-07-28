@@ -22,11 +22,10 @@ impl PatternRule {
     }
 
     pub fn calculate_canonical_key(width: usize, height: usize) -> Option<(usize, usize)> {
-        if width == 1 && height == 1 {
+        if (width == 1 && height == 1) || (width != height) {
             None
         } else {
-            let size = std::cmp::max(width, height);
-            Some((size, size))
+            Some((width, height))
         }
     }
 }
