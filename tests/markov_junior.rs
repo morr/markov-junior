@@ -1,11 +1,6 @@
 #![feature(stmt_expr_attributes)]
-use std::collections::HashMap;
 
 use markov_junior::*;
-
-fn create_test_grid(data: &str) -> Vec<u8> {
-    data.chars().map(|c| c as u8).collect()
-}
 
 fn set_pattern(mj: &mut MarkovJunior, line: &str) -> Pattern {
     let pattern = Pattern::new(line);
@@ -21,13 +16,7 @@ fn set_pattern(mj: &mut MarkovJunior, line: &str) -> Pattern {
 
 #[test]
 fn test_pattern_fits_canonical() {
-    let mut mj = MarkovJunior {
-        grid: create_test_grid("ABCDEFGHI"),
-        width: 3,
-        height: 3,
-        rules: vec![],
-        canonical_forms: HashMap::new(),
-    };
+    let mut mj = MarkovJunior::new_grid("ABCDEFGHI", 3, 3);
 
     let pattern = set_pattern(&mut mj, "EF/HI");
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern), None);
@@ -71,13 +60,7 @@ fn test_pattern_fits_canonical() {
 
 #[test]
 fn test_pattern_fits() {
-    let mut mj = MarkovJunior {
-        grid: create_test_grid("ABCDEFGHI"),
-        width: 3,
-        height: 3,
-        rules: vec![],
-        canonical_forms: HashMap::new(),
-    };
+    let mut mj = MarkovJunior::new_grid("ABCDEFGHI", 3, 3);
 
     let pattern = set_pattern(&mut mj, "AB");
     assert_eq!(mj.pattern_fits(0, 0, &pattern), Some(1));

@@ -24,6 +24,16 @@ impl MarkovJunior {
         }
     }
 
+    pub fn new_grid(data: &str, width: usize, height: usize) -> Self {
+        MarkovJunior {
+            grid: data.chars().map(|c| c as u8).collect(),
+            width,
+            height,
+            rules: Vec::new(),
+            canonical_forms: HashMap::new(),
+        }
+    }
+
     pub fn add_rule(&mut self, rule: Rule) {
         self.rules.push(rule);
     }
