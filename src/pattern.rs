@@ -43,7 +43,6 @@ pub struct PatternMatch {
     pub x: usize,
     pub y: usize,
     pub weight: f32,
-    pub rule_index: usize,
     pub pattern_index: usize,
     pub rotation: isize,
 }

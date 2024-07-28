@@ -11,11 +11,6 @@ pub struct MarkovJunior {
     pub height: usize,
     pub rules: Vec<Rule>,
     pub canonical_forms: HashMap<(usize, usize), Vec<RotatedSeq>>,
-    /// pattern_index: usize is a key
-    // pub cache: HashMap<(usize, usize), Vec<PatternMatch>>,
-    // pub inverse_cache: HashMap<usize, Vec<PatternMatch>>,
-    pub cache: HashMap<usize, Vec<PatternMatch>>,
-    // pub point_cache: HashMap<(usize, usize), Vec<PatternMatch>>,
 }
 
 impl MarkovJunior {
@@ -26,8 +21,6 @@ impl MarkovJunior {
             height,
             rules: Vec::new(),
             canonical_forms: HashMap::new(),
-            cache: HashMap::new(),
-            // inverse_cache: HashMap::new(),
         }
     }
 
@@ -38,8 +31,6 @@ impl MarkovJunior {
             height,
             rules: Vec::new(),
             canonical_forms: HashMap::new(),
-            cache: HashMap::new(),
-            // inverse_cache: HashMap::new(),
         }
     }
 
@@ -56,13 +47,15 @@ impl MarkovJunior {
             let kind = rule.kind;
 
             self.precompute_canonical_forms(rule_index);
-            self.compute_cache(rule_index, 0..self.width, 0..self.height);
+            let mut cache = self.compute_cache(rule_index, 0..self.width, 0..self.height);
 
             for _step in 0..steps {
                 let any_change = match kind {
-                    RuleKind::One => self.apply_one_rule(&mut rng, rule_index),
-                    RuleKind::All => self.apply_all_rule(rule_index),
-                    RuleKind::Parallel => self.apply_parallel_rule(&mut rng, rule_index),
+                    RuleKind::One => self.apply_one_rule(&mut rng, rule_index, &mut cache),
+                    RuleKind::All => self.apply_all_rule(rule_index, &mut cache),
+                    RuleKind::Parallel => {
+                        self.apply_parallel_rule(&mut rng, rule_index, &mut cache)
+                    }
                 };
 
                 if !any_change {
@@ -70,45 +63,6 @@ impl MarkovJunior {
                 }
             }
         }
-    }
-
-    fn match_patterns_for_rule(&self, rule_index: usize) -> Vec<PatternMatch> {
-        let mut valid_patterns = Vec::new();
-        let rule = &self.rules[rule_index];
-
-        for y in 0..self.height {
-            for x in 0..self.width {
-                for (pattern_index, pattern_rule) in rule.patterns.iter().enumerate() {
-                    let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
-                        self.pattern_fits_canonical(x, y, &pattern_rule.input)
-                            .map(|rotation| PatternMatch {
-                                x,
-                                y,
-                                weight: pattern_rule.weight,
-                                pattern_index,
-                                rule_index,
-                                rotation,
-                            })
-                    } else {
-                        self.pattern_fits(x, y, &pattern_rule.input)
-                            .map(|rotation| PatternMatch {
-                                x,
-                                y,
-                                weight: pattern_rule.weight,
-                                pattern_index,
-                                rule_index,
-                                rotation,
-                            })
-                    };
-
-                    if let Some(pattern_match) = maybe_pattern_match {
-                        valid_patterns.push(pattern_match);
-                    }
-                }
-            }
-        }
-
-        valid_patterns
     }
 
     pub fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<isize> {
@@ -165,8 +119,13 @@ impl MarkovJunior {
         None
     }
 
-    fn apply_one_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
-        let valid_patterns = self.match_patterns_for_rule(rule_index);
+    fn apply_one_rule(
+        &mut self,
+        rng: &mut impl Rng,
+        rule_index: usize,
+        cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
+    ) -> bool {
+        let valid_patterns = Self::cached_patterns(cache);
 
         if valid_patterns.is_empty() {
             return false;
@@ -184,8 +143,7 @@ impl MarkovJunior {
             weight,
             pattern_index,
             rotation,
-            ..
-        } in &valid_patterns
+        } in valid_patterns
         {
             choice -= weight;
 
@@ -212,8 +170,12 @@ impl MarkovJunior {
         false
     }
 
-    fn apply_all_rule(&mut self, rule_index: usize) -> bool {
-        let valid_patterns = self.match_patterns_for_rule(rule_index);
+    fn apply_all_rule(
+        &mut self,
+        rule_index: usize,
+        cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
+    ) -> bool {
+        let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
 
         for &PatternMatch {
@@ -222,7 +184,7 @@ impl MarkovJunior {
             pattern_index,
             rotation,
             ..
-        } in &valid_patterns
+        } in valid_patterns
         {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
             let pattern = pattern_rule.output.clone();
@@ -244,8 +206,13 @@ impl MarkovJunior {
         applied
     }
 
-    fn apply_parallel_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
-        let valid_patterns = self.match_patterns_for_rule(rule_index);
+    fn apply_parallel_rule(
+        &mut self,
+        rng: &mut impl Rng,
+        rule_index: usize,
+        cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
+    ) -> bool {
+        let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
         let mut changes = Vec::new();
 
@@ -255,7 +222,7 @@ impl MarkovJunior {
             pattern_index,
             rotation,
             ..
-        } in &valid_patterns
+        } in valid_patterns
         {
             if rng.gen_bool(0.5) {
                 let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
@@ -370,108 +337,34 @@ impl MarkovJunior {
         rule_index: usize,
         x_range: Range<usize>,
         y_range: Range<usize>,
-    ) {
-        let rule = &self.rules[rule_index];
+    ) -> HashMap<(usize, usize), Vec<PatternMatch>> {
+        y_range
+            .flat_map(|y| x_range.clone().map(move |x| (x, y)))
+            .map(|(x, y)| {
+                let valid_patterns = self.rules[rule_index]
+                    .patterns
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(pattern_index, pattern_rule)| {
+                        let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
+                            self.pattern_fits_canonical(x, y, &pattern_rule.input)
+                        } else {
+                            self.pattern_fits(x, y, &pattern_rule.input)
+                        };
 
-        // let cache: HashMap<(usize, usize), Vec<PatternMatch>> = y_range
-        //     .flat_map(|y| x_range.clone().map(move |x| (x, y)))
-        //     .map(|(x, y)| {
-        //         let valid_patterns = rule
-        //             .patterns
-        //             .iter()
-        //             .enumerate()
-        //             .filter_map(|(pattern_index, pattern_rule)| {
-        //                 let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
-        //                     self.pattern_fits_canonical(x, y, &pattern_rule.input)
-        //                 } else {
-        //                     self.pattern_fits(x, y, &pattern_rule.input)
-        //                 };
-        //
-        //                 maybe_pattern_match.map(|rotation| PatternMatch {
-        //                     x,
-        //                     y,
-        //                     weight: pattern_rule.weight,
-        //                     pattern_index,
-        //                     rotation,
-        //                 })
-        //             })
-        //             .collect::<Vec<_>>();
-        //
-        //         ((x, y), valid_patterns)
-        //     })
-        //     .collect();
+                        maybe_pattern_match.map(|rotation| PatternMatch {
+                            x,
+                            y,
+                            weight: pattern_rule.weight,
+                            pattern_index,
+                            rotation,
+                        })
+                    })
+                    .collect::<Vec<_>>();
 
-        // let cache: HashMap<(usize, usize), Vec<PatternMatch>> = y_range
-        // self.cache.exten
-        //     y_range
-        //     .flat_map(|y| x_range.clone().map(move |x| (x, y)))
-        //     .map(|(x, y)| {
-        //         ((x, y), vec![])
-        //     })
-        //     .collect();
-
-        // self.cache = rule
-        //     .patterns
-        //     .iter()
-        //     .enumerate()
-        //     .map(|(pattern_index, pattern_rule)| {
-        //         let valid_patterns: Vec<PatternMatch> = (0..self.height)
-        //             .flat_map(|y| (0..self.width).map(move |x| (x, y)))
-        //             .filter_map(|(x, y)| {
-        //                 let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
-        //                     self.pattern_fits_canonical(x, y, &pattern_rule.input)
-        //                 } else {
-        //                     self.pattern_fits(x, y, &pattern_rule.input)
-        //                 };
-        //
-        //                 maybe_pattern_match.map(|rotation| PatternMatch {
-        //                     x,
-        //                     y,
-        //                     weight: pattern_rule.weight,
-        //                     pattern_index,
-        //                     rotation,
-        //                 })
-        //             })
-        //             .collect();
-        //
-        //         (pattern_index, valid_patterns)
-        //     })
-        //     .collect::<HashMap<usize, Vec<PatternMatch>>>();
-
-        // self.cache = HashMap::new();
-        // for (pattern_index, pattern_rule) in rule.patterns.iter().enumerate() {
-        //     let mut valid_patterns: Vec<PatternMatch> = Vec::new();
-        //
-        //     for y in 0..self.height {
-        //         for x in 0..self.width {
-        //             let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
-        //                 self.pattern_fits_canonical(x, y, &pattern_rule.input)
-        //                     .map(|rotation| PatternMatch {
-        //                         x,
-        //                         y,
-        //                         weight: pattern_rule.weight,
-        //                         pattern_index,
-        //                         rotation,
-        //                     })
-        //             } else {
-        //                 self.pattern_fits(x, y, &pattern_rule.input)
-        //                     .map(|rotation| PatternMatch {
-        //                         x,
-        //                         y,
-        //                         weight: pattern_rule.weight,
-        //                         pattern_index,
-        //                         rotation,
-        //                     })
-        //             };
-        //
-        //             if let Some(pattern_match) = maybe_pattern_match {
-        //                 valid_patterns.push(pattern_match);
-        //             }
-        //         }
-        //     }
-        //
-        //     // self.cache.insert(pattern_index, valid_patterns);
-        // }
+                ((x, y), valid_patterns)
+            })
+            .collect()
     }
 
     pub fn print_grid(&self) {
@@ -481,6 +374,13 @@ impl MarkovJunior {
             }
             println!();
         }
+    }
+
+    fn cached_patterns(cache: HashMap<(usize, usize), Vec<PatternMatch>>) -> Vec<PatternMatch> {
+        cache
+            .iter()
+            .flat_map(|(_k, pattern_matches)| pattern_matches)
+            .collect()
     }
 
     fn compute_cell_canonical_form(
