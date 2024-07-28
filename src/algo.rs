@@ -86,6 +86,7 @@ impl MarkovJunior {
                                 y,
                                 weight: pattern_rule.weight,
                                 pattern_index,
+                                rule_index,
                                 rotation,
                             })
                     } else {
@@ -95,6 +96,7 @@ impl MarkovJunior {
                                 y,
                                 weight: pattern_rule.weight,
                                 pattern_index,
+                                rule_index,
                                 rotation,
                             })
                     };
@@ -182,6 +184,7 @@ impl MarkovJunior {
             weight,
             pattern_index,
             rotation,
+            ..
         } in &valid_patterns
         {
             choice -= weight;
