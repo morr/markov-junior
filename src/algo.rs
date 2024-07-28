@@ -100,38 +100,24 @@ impl MarkovJunior {
             return None;
         }
 
-        match PatternRule::calculate_canonical_key(pattern.width, pattern.height) {
-            None => {
-                // For 1x1 patterns, perform a direct comparison
-                let grid_char = self.grid[y * self.width + x] as char;
-                if grid_char == pattern.data[0] || pattern.data[0] == ANYTHING {
-                    Some(1)
-                } else {
-                    None
-                }
-            }
-            Some(key) => {
-                let precalculated_forms = self
-                    .canonical_forms
-                    .get(&key)
-                    .expect("Canonical form should be precalculated for this key");
+        let canonical_key =
+            PatternRule::calculate_canonical_key(pattern.width, pattern.height).unwrap();
+        let precalculated_forms = self
+            .canonical_forms
+            .get(&canonical_key)
+            .expect("Canonical form should be precalculated for this key");
 
-                let index = y * self.width + x;
-                let grid_canonical_form = &precalculated_forms[index];
-                let pattern_canonical_form = &pattern.canonical_form.as_ref().unwrap();
+        let index = y * self.width + x;
+        let grid_canonical_form = &precalculated_forms[index];
+        let pattern_canonical_form = &pattern.canonical_form.as_ref().unwrap();
 
-                // println!("\npattern: {:?}", pattern);
-                // println!("grid_canonical_form: {:?}", grid_canonical_form);
+        // println!("\npattern: {:?}", pattern);
+        // println!("grid_canonical_form: {:?}", grid_canonical_form);
 
-                if self.compare_canonical_forms(
-                    &grid_canonical_form.data,
-                    &pattern_canonical_form.data,
-                ) {
-                    Some(pattern_canonical_form.rotation)
-                } else {
-                    None
-                }
-            }
+        if self.compare_canonical_forms(&grid_canonical_form.data, &pattern_canonical_form.data) {
+            Some(pattern_canonical_form.rotation)
+        } else {
+            None
         }
     }
 
@@ -312,7 +298,11 @@ impl MarkovJunior {
 
     pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
         // println!("{:?}", pattern.rotations);
-        let rotated_seq = pattern.rotations.iter().find(|&rotated_seq| rotated_seq.rotation == rotation).unwrap();
+        let rotated_seq = pattern
+            .rotations
+            .iter()
+            .find(|&rotated_seq| rotated_seq.rotation == rotation)
+            .unwrap();
         // println!("{:?}", rotated_seq);
 
         for (i, &pattern_char) in rotated_seq.data.iter().enumerate() {
@@ -442,6 +432,8 @@ impl MarkovJunior {
                 }
             }
         }
-        Pattern::compute_canonical_form_and_rotations(&data, pattern_width, pattern_height).0.unwrap()
+        Pattern::compute_canonical_form_and_rotations(&data, pattern_width, pattern_height)
+            .0
+            .unwrap()
     }
 }
