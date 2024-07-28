@@ -296,8 +296,8 @@ impl MarkovJunior {
         // println!("{:?}", rotated_seq);
 
         for (i, &pattern_char) in rotated_seq.data.iter().enumerate() {
-            let px = i % pattern.width;
-            let py = i / pattern.width;
+            let px = i % rotated_seq.width;
+            let py = i / rotated_seq.width;
             if pattern_char != ANYTHING {
                 let index = (y + py) * self.width + (x + px);
                 self.grid[index] = pattern_char as u8;
