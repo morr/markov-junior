@@ -12,8 +12,10 @@ pub struct MarkovJunior {
     pub rules: Vec<Rule>,
     pub canonical_forms: HashMap<(usize, usize), Vec<RotatedSeq>>,
     /// pattern_index: usize is a key
-    pub cache: HashMap<usize, Vec<PatternMatch>>,
-    pub inverse_cache: HashMap<(usize, usize), Vec<Vec<char>>>,
+    pub cache: HashMap<(usize, usize), Vec<PatternMatch>>,
+    // pub inverse_cache: HashMap<usize, Vec<PatternMatch>>,
+    // pub cache: HashMap<(usize, usize), Vec<Vec<char>>>,
+    // pub inverse_cache: HashMap<usize, Vec<PatternMatch>>,
 }
 
 impl MarkovJunior {
@@ -25,7 +27,7 @@ impl MarkovJunior {
             rules: Vec::new(),
             canonical_forms: HashMap::new(),
             cache: HashMap::new(),
-            inverse_cache: HashMap::new(),
+            // inverse_cache: HashMap::new(),
         }
     }
 
@@ -37,7 +39,7 @@ impl MarkovJunior {
             rules: Vec::new(),
             canonical_forms: HashMap::new(),
             cache: HashMap::new(),
-            inverse_cache: HashMap::new(),
+            // inverse_cache: HashMap::new(),
         }
     }
 
@@ -362,16 +364,15 @@ impl MarkovJunior {
 
     pub fn precompute_cache(&mut self, rule_index: usize) {
         let rule = &self.rules[rule_index];
-        self.inverse_cache = HashMap::new();
 
-        self.cache = rule
-            .patterns
-            .iter()
-            .enumerate()
-            .map(|(pattern_index, pattern_rule)| {
-                let valid_patterns: Vec<PatternMatch> = (0..self.height)
-                    .flat_map(|y| (0..self.width).map(move |x| (x, y)))
-                    .filter_map(|(x, y)| {
+        self.cache = (0..self.height)
+            .flat_map(|y| (0..self.width).map(move |x| (x, y)))
+            .map(|(x, y)| {
+                let valid_patterns = rule
+                    .patterns
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(pattern_index, pattern_rule)| {
                         let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
                             self.pattern_fits_canonical(x, y, &pattern_rule.input)
                         } else {
@@ -386,11 +387,74 @@ impl MarkovJunior {
                             rotation,
                         })
                     })
-                    .collect();
+                    .collect::<Vec<_>>();
 
-                (pattern_index, valid_patterns)
+                ((x, y), valid_patterns)
             })
-            .collect::<HashMap<usize, Vec<PatternMatch>>>();
+            .collect();
+
+        // self.cache = rule
+        //     .patterns
+        //     .iter()
+        //     .enumerate()
+        //     .map(|(pattern_index, pattern_rule)| {
+        //         let valid_patterns: Vec<PatternMatch> = (0..self.height)
+        //             .flat_map(|y| (0..self.width).map(move |x| (x, y)))
+        //             .filter_map(|(x, y)| {
+        //                 let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
+        //                     self.pattern_fits_canonical(x, y, &pattern_rule.input)
+        //                 } else {
+        //                     self.pattern_fits(x, y, &pattern_rule.input)
+        //                 };
+        //
+        //                 maybe_pattern_match.map(|rotation| PatternMatch {
+        //                     x,
+        //                     y,
+        //                     weight: pattern_rule.weight,
+        //                     pattern_index,
+        //                     rotation,
+        //                 })
+        //             })
+        //             .collect();
+        //
+        //         (pattern_index, valid_patterns)
+        //     })
+        //     .collect::<HashMap<usize, Vec<PatternMatch>>>();
+
+        // self.cache = HashMap::new();
+        // for (pattern_index, pattern_rule) in rule.patterns.iter().enumerate() {
+        //     let mut valid_patterns: Vec<PatternMatch> = Vec::new();
+        //
+        //     for y in 0..self.height {
+        //         for x in 0..self.width {
+        //             let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
+        //                 self.pattern_fits_canonical(x, y, &pattern_rule.input)
+        //                     .map(|rotation| PatternMatch {
+        //                         x,
+        //                         y,
+        //                         weight: pattern_rule.weight,
+        //                         pattern_index,
+        //                         rotation,
+        //                     })
+        //            } else {
+        //                 self.pattern_fits(x, y, &pattern_rule.input)
+        //                     .map(|rotation| PatternMatch {
+        //                         x,
+        //                         y,
+        //                         weight: pattern_rule.weight,
+        //                         pattern_index,
+        //                         rotation,
+        //                     })
+        //             };
+        //
+        //             if let Some(pattern_match) = maybe_pattern_match {
+        //                 valid_patterns.push(pattern_match);
+        //             }
+        //         }
+        //     }
+        //
+        //     self.cache.insert(pattern_index, valid_patterns);
+        // }
     }
 
     pub fn print_grid(&self) {
