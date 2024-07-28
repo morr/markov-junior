@@ -114,7 +114,7 @@ impl MarkovJunior {
         // println!("\npattern: {:?}", pattern);
         // println!("grid_canonical_form: {:?}", grid_canonical_form);
 
-        if self.compare_canonical_forms(&grid_canonical_form.data, &pattern_canonical_form.data) {
+        if grid_canonical_form.data == pattern_canonical_form.data {
             Some(pattern_canonical_form.rotation)
         } else {
             None
@@ -144,21 +144,6 @@ impl MarkovJunior {
         }
 
         None
-    }
-
-    fn compare_canonical_forms(&self, grid_form: &[char], pattern_form: &[char]) -> bool {
-        debug_assert_eq!(
-            grid_form.len(),
-            pattern_form.len(),
-            "Canonical forms should have the same length"
-        );
-
-        grid_form
-            .iter()
-            .zip(pattern_form.iter())
-            .all(|(&grid_char, &pattern_char)| {
-                pattern_char == ANYTHING || grid_char == pattern_char
-            })
     }
 
     fn apply_one_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
