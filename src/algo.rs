@@ -66,26 +66,28 @@ impl MarkovJunior {
         for y in 0..self.height {
             for x in 0..self.width {
                 for (pattern_index, pattern_rule) in rule.patterns.iter().enumerate() {
-                    if pattern_rule.input.canonical_form.is_some() {
-                        if let Some(rotation) =
-                            self.pattern_fits_canonical(x, y, &pattern_rule.input)
-                        {
-                            valid_patterns.push(PatternMatch {
+                    let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
+                        self.pattern_fits_canonical(x, y, &pattern_rule.input)
+                            .map(|rotation| PatternMatch {
                                 x,
                                 y,
                                 weight: pattern_rule.weight,
                                 pattern_index,
                                 rotation,
-                            });
-                        }
-                    } else if let Some(rotation) = self.pattern_fits(x, y, &pattern_rule.input) {
-                        valid_patterns.push(PatternMatch {
-                            x,
-                            y,
-                            weight: pattern_rule.weight,
-                            pattern_index,
-                            rotation,
-                        });
+                            })
+                    } else {
+                        self.pattern_fits(x, y, &pattern_rule.input)
+                            .map(|rotation| PatternMatch {
+                                x,
+                                y,
+                                weight: pattern_rule.weight,
+                                pattern_index,
+                                rotation,
+                            })
+                    };
+
+                    if let Some(pattern_match) = maybe_pattern_match {
+                        valid_patterns.push(pattern_match);
                     }
                 }
             }
@@ -135,7 +137,7 @@ impl MarkovJunior {
 
             for py in 0..pattern.height {
                 for px in 0..pattern.width {
-                    let pattern_char = pattern_data[py * rotated_seq.width + px];
+                    let pattern_char = pattern_data[py * pattern.width + px];
                     if pattern_char != ANYTHING {
                         let grid_char = grid[(y + py) * grid_width + (x + px)] as char;
                         if pattern_char != grid_char {
