@@ -135,24 +135,29 @@ impl MarkovJunior {
         }
     }
 
-    fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
-        let pattern_data = &pattern.data;
+    fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> Option<isize> {
         let grid_width = self.width;
         let grid = &self.grid;
 
-        for py in 0..pattern.height {
-            for px in 0..pattern.width {
-                let pattern_char = pattern_data[py * pattern.width + px];
-                if pattern_char != ANYTHING {
-                    let grid_char = grid[(y + py) * grid_width + (x + px)] as char;
-                    if pattern_char != grid_char {
-                        return false;
+        'rotated_seq: for rotated_seq in pattern.unique_rotations.iter() {
+            let pattern_data = &rotated_seq.data;
+
+            for py in 0..pattern.height {
+                for px in 0..pattern.width {
+                    let pattern_char = pattern_data[py * pattern.width + px];
+                    if pattern_char != ANYTHING {
+                        let grid_char = grid[(y + py) * grid_width + (x + px)] as char;
+                        if pattern_char != grid_char {
+                            continue 'rotated_seq;
+                        }
                     }
                 }
             }
+
+            return Some(rotated_seq.rotation);
         }
 
-        true
+        None
     }
 
     fn compare_canonical_forms(&self, grid_form: &[char], pattern_form: &[char]) -> bool {
