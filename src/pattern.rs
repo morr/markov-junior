@@ -150,13 +150,14 @@ impl Pattern {
             },
         ];
 
-        let unique_rotations: Vec<RotatedSeq> = rotations
-            .clone()
-            .into_iter()
-            .map(|r| ((r.data.clone(), r.width), r))
-            .collect::<std::collections::HashMap<_, _>>()
-            .into_values()
-            .collect();
+        let mut unique_rotations = Vec::new();
+        for rotation in rotations.iter() {
+            if !unique_rotations.iter().any(|r: &RotatedSeq| {
+                r.data == rotation.data && r.width == rotation.width && r.height == rotation.height
+            }) {
+                unique_rotations.push(rotation.clone());
+            }
+        }
 
         if has_wildcards || width != height {
             (None, rotations, unique_rotations)
