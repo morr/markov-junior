@@ -56,7 +56,7 @@ impl MarkovJunior {
             let kind = rule.kind;
 
             self.precompute_canonical_forms(rule_index);
-            self.precompute_cache(rule_index, 0..self.width, 0..self.height);
+            self.cache = self.compute_cache(rule_index, 0..self.width, 0..self.height);
 
             for _step in 0..steps {
                 let any_change = match kind {
@@ -362,15 +362,15 @@ impl MarkovJunior {
         }
     }
 
-    pub fn precompute_cache(
+    pub fn compute_cache(
         &mut self,
         rule_index: usize,
         x_range: Range<usize>,
         y_range: Range<usize>,
-    ) {
+    ) -> HashMap<(usize, usize), Vec<PatternMatch>> {
         let rule = &self.rules[rule_index];
 
-        self.cache = y_range
+        y_range
             .flat_map(|y| x_range.clone().map(move |x| (x, y)))
             .map(|(x, y)| {
                 let valid_patterns = rule
@@ -396,7 +396,7 @@ impl MarkovJunior {
 
                 ((x, y), valid_patterns)
             })
-            .collect();
+            .collect::<HashMap<(usize, usize), Vec<PatternMatch>>>()
 
         // self.cache = rule
         //     .patterns
