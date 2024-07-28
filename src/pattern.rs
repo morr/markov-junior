@@ -76,7 +76,7 @@ impl Pattern {
             height,
             rotations,
             unique_rotations,
-            canonical_form: maybe_canonical_form
+            canonical_form: maybe_canonical_form,
         }
     }
 
@@ -86,7 +86,7 @@ impl Pattern {
         height: usize,
     ) -> (Option<RotatedSeq>, Vec<RotatedSeq>, Vec<RotatedSeq>) {
         let has_wildcards = data.iter().any(|&char| char == ANYTHING);
-        if has_wildcards || (width == 1 && height == 1) {
+        if has_wildcards || (width == 1 && height == 1) || (width != height) {
             let rotation = RotatedSeq {
                 data: data.to_vec(),
                 rotation: 1,
