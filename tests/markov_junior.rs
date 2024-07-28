@@ -9,7 +9,7 @@ fn set_pattern(mj: &mut MarkovJunior, line: &str) -> Pattern {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.calculate_canonical_forms(0);
+    mj.precompute_canonical_forms(0);
 
     pattern
 }

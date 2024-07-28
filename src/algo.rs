@@ -11,6 +11,9 @@ pub struct MarkovJunior {
     pub height: usize,
     pub rules: Vec<Rule>,
     pub canonical_forms: HashMap<(usize, usize), Vec<RotatedSeq>>,
+    /// pattern_index: usize is a key
+    pub cache: HashMap<usize, Vec<PatternMatch>>,
+    pub inverse_cache: HashMap<(usize, usize), Vec<Vec<char>>>,
 }
 
 impl MarkovJunior {
@@ -21,6 +24,8 @@ impl MarkovJunior {
             height,
             rules: Vec::new(),
             canonical_forms: HashMap::new(),
+            cache: HashMap::new(),
+            inverse_cache: HashMap::new(),
         }
     }
 
@@ -31,6 +36,8 @@ impl MarkovJunior {
             height,
             rules: Vec::new(),
             canonical_forms: HashMap::new(),
+            cache: HashMap::new(),
+            inverse_cache: HashMap::new(),
         }
     }
 
@@ -46,7 +53,8 @@ impl MarkovJunior {
             let steps = rule.steps.unwrap_or(self.width * self.height * 16);
             let kind = rule.kind;
 
-            self.calculate_canonical_forms(rule_index);
+            self.precompute_canonical_forms(rule_index);
+            self.precompute_cache(rule_index);
 
             for _step in 0..steps {
                 let any_change = match kind {
@@ -321,7 +329,7 @@ impl MarkovJunior {
         }
     }
 
-    pub fn calculate_canonical_forms(&mut self, rule_index: usize) {
+    pub fn precompute_canonical_forms(&mut self, rule_index: usize) {
         for pattern_rule in self.rules[rule_index].patterns.iter() {
             let Some(canonical_key) = pattern_rule.canonical_key else {
                 continue;
@@ -335,7 +343,6 @@ impl MarkovJunior {
 
             for y in 0..self.height {
                 for x in 0..self.width {
-
                     canonical_key_forms.push(Self::compute_cell_canonical_form(
                         &self.grid,
                         self.width,
@@ -351,6 +358,39 @@ impl MarkovJunior {
             self.canonical_forms
                 .insert(canonical_key, canonical_key_forms);
         }
+    }
+
+    pub fn precompute_cache(&mut self, rule_index: usize) {
+        let rule = &self.rules[rule_index];
+        self.inverse_cache = HashMap::new();
+
+        self.cache = rule
+            .patterns
+            .iter()
+            .enumerate()
+            .map(|(pattern_index, pattern_rule)| {
+                let valid_patterns: Vec<PatternMatch> = (0..self.height)
+                    .flat_map(|y| (0..self.width).map(move |x| (x, y)))
+                    .filter_map(|(x, y)| {
+                        let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
+                            self.pattern_fits_canonical(x, y, &pattern_rule.input)
+                        } else {
+                            self.pattern_fits(x, y, &pattern_rule.input)
+                        };
+
+                        maybe_pattern_match.map(|rotation| PatternMatch {
+                            x,
+                            y,
+                            weight: pattern_rule.weight,
+                            pattern_index,
+                            rotation,
+                        })
+                    })
+                    .collect();
+
+                (pattern_index, valid_patterns)
+            })
+            .collect::<HashMap<usize, Vec<PatternMatch>>>();
     }
 
     pub fn print_grid(&self) {
