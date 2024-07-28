@@ -66,7 +66,19 @@ impl MarkovJunior {
         for y in 0..self.height {
             for x in 0..self.width {
                 for (pattern_index, pattern_rule) in rule.patterns.iter().enumerate() {
-                    if let Some(rotation) = self.pattern_fits_canonical(x, y, &pattern_rule.input) {
+                    if pattern_rule.input.canonical_form.is_some() {
+                        if let Some(rotation) =
+                            self.pattern_fits_canonical(x, y, &pattern_rule.input)
+                        {
+                            valid_patterns.push(PatternMatch {
+                                x,
+                                y,
+                                weight: pattern_rule.weight,
+                                pattern_index,
+                                rotation,
+                            });
+                        }
+                    } else if let Some(rotation) = self.pattern_fits(x, y, &pattern_rule.input) {
                         valid_patterns.push(PatternMatch {
                             x,
                             y,
@@ -83,6 +95,7 @@ impl MarkovJunior {
     }
 
     pub fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<isize> {
+        // ensure pattern definitely fits within the grid boundaries
         if x + pattern.width > self.width || y + pattern.height > self.height {
             return None;
         }
@@ -105,12 +118,16 @@ impl MarkovJunior {
 
                 let index = y * self.width + x;
                 let grid_canonical_form = &precalculated_forms[index];
+                let pattern_canonical_form = &pattern.canonical_form.as_ref().unwrap();
 
                 // println!("\npattern: {:?}", pattern);
                 // println!("grid_canonical_form: {:?}", grid_canonical_form);
 
-                if self.compare_canonical_forms(&grid_canonical_form.data, &pattern.canonical_form.data) {
-                    Some(pattern.canonical_form.rotation)
+                if self.compare_canonical_forms(
+                    &grid_canonical_form.data,
+                    &pattern_canonical_form.data,
+                ) {
+                    Some(pattern_canonical_form.rotation)
                 } else {
                     None
                 }
@@ -118,12 +135,39 @@ impl MarkovJunior {
         }
     }
 
-    fn compare_canonical_forms(&self, grid_form: &[char], pattern_form: &[char]) -> bool {
-        debug_assert_eq!(grid_form.len(), pattern_form.len(), "Canonical forms should have the same length");
+    fn pattern_fits(&self, x: usize, y: usize, pattern: &Pattern) -> bool {
+        let pattern_data = &pattern.data;
+        let grid_width = self.width;
+        let grid = &self.grid;
 
-        grid_form.iter().zip(pattern_form.iter()).all(|(&grid_char, &pattern_char)| {
-            pattern_char == ANYTHING || grid_char == pattern_char
-        })
+        for py in 0..pattern.height {
+            for px in 0..pattern.width {
+                let pattern_char = pattern_data[py * pattern.width + px];
+                if pattern_char != ANYTHING {
+                    let grid_char = grid[(y + py) * grid_width + (x + px)] as char;
+                    if pattern_char != grid_char {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        true
+    }
+
+    fn compare_canonical_forms(&self, grid_form: &[char], pattern_form: &[char]) -> bool {
+        debug_assert_eq!(
+            grid_form.len(),
+            pattern_form.len(),
+            "Canonical forms should have the same length"
+        );
+
+        grid_form
+            .iter()
+            .zip(pattern_form.iter())
+            .all(|(&grid_char, &pattern_char)| {
+                pattern_char == ANYTHING || grid_char == pattern_char
+            })
     }
 
     fn apply_one_rule(&mut self, rng: &mut impl Rng, rule_index: usize) -> bool {
@@ -236,7 +280,12 @@ impl MarkovJunior {
     }
 
     pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
-        let rotated_output = Pattern::rollback_rotation(&pattern.canonical_form.data, pattern.width, pattern.height, rotation);
+        let rotated_output = Pattern::rollback_rotation(
+            &pattern.canonical_form.data,
+            pattern.width,
+            pattern.height,
+            rotation,
+        );
         let width = match rotation.abs() {
             1 | 3 => pattern.width,
             2 | 4 => pattern.height,
@@ -373,6 +422,6 @@ impl MarkovJunior {
                 }
             }
         }
-        Pattern::compute_canonical_form(&data, pattern_width, pattern_height).0
+        Pattern::compute_canonical_form_and_rotations(&data, pattern_width, pattern_height).0
     }
 }
