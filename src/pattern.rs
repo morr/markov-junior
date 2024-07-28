@@ -56,6 +56,7 @@ pub struct Pattern {
     pub width: usize,
     pub height: usize,
     pub rotations: Vec<RotatedSeq>,
+    pub unique_rotations: Vec<RotatedSeq>,
     pub canonical_form: Option<RotatedSeq>,
 }
 
@@ -66,7 +67,8 @@ impl Pattern {
         let height = parts.len();
         let data = parts.join("").chars().collect::<Vec<char>>();
 
-        let (canonical_form, rotations) = Self::compute_canonical_form(&data, width, height);
+        let (canonical_form, rotations, unique_rotations) =
+            Self::compute_canonical_form_and_rotations(&data, width, height);
         let has_wildcards = data.iter().any(|&char| char == ANYTHING);
 
         Pattern {
@@ -74,19 +76,20 @@ impl Pattern {
             width,
             height,
             rotations,
-            canonical_form: if has_wildcards {
-                Some(canonical_form)
-            } else {
+            unique_rotations,
+            canonical_form: if has_wildcards || width != height {
                 None
+            } else {
+                Some(canonical_form)
             },
         }
     }
 
-    pub fn compute_canonical_form(
+    pub fn compute_canonical_form_and_rotations(
         data: &[char],
         width: usize,
         height: usize,
-    ) -> (RotatedSeq, Vec<RotatedSeq>) {
+    ) -> (RotatedSeq, Vec<RotatedSeq>, Vec<RotatedSeq>) {
         let rotations = [
             RotatedSeq {
                 data: data.to_vec(),
@@ -129,7 +132,7 @@ impl Pattern {
             .into_values()
             .collect();
 
-        let canonical_form = unique_rotations
+        let canonical_form = rotations
             .iter()
             .min_by(|a, b| {
                 let data_cmp = a
@@ -146,7 +149,7 @@ impl Pattern {
             .unwrap()
             .clone();
 
-        (canonical_form, unique_rotations)
+        (canonical_form, rotations, unique_rotations)
     }
 
     pub fn compute_canonical_form_mirrored(
