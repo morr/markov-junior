@@ -47,7 +47,7 @@ impl MarkovJunior {
             let kind = rule.kind;
 
             self.precompute_canonical_forms(rule_index);
-            let mut cache = self.compute_cache(rule_index, 0..self.width, 0..self.height);
+            let mut cache = self.compute_cache(rule_index, &(0..self.width), &(0..self.height));
 
             for _step in 0..steps {
                 let any_change = match kind {
@@ -152,14 +152,12 @@ impl MarkovJunior {
                     pattern_match.rotation,
                 );
 
+                let x_range = Self::x_range(pattern_match.x, pattern.width, self.width);
+                let y_range = Self::x_range(pattern_match.y, pattern.height, self.height);
                 if is_canonical_key {
-                    self.update_canonical_forms(
-                        pattern_match.x,
-                        pattern_match.y,
-                        std::cmp::max(pattern.width, pattern.height),
-                        rule_index,
-                    );
+                    self.update_canonical_forms(&x_range, &y_range, rule_index);
                 }
+                cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
 
                 return true;
             }
@@ -187,14 +185,13 @@ impl MarkovJunior {
                 &pattern,
                 pattern_match.rotation,
             );
+
+            let x_range = Self::x_range(pattern_match.x, pattern.width, self.width);
+            let y_range = Self::x_range(pattern_match.y, pattern.height, self.height);
             if is_canonical_key {
-                self.update_canonical_forms(
-                    pattern_match.x,
-                    pattern_match.y,
-                    std::cmp::max(pattern.width, pattern.height),
-                    rule_index,
-                );
+                self.update_canonical_forms(&x_range, &x_range, rule_index);
             }
+            cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
 
             applied = true;
         }
@@ -231,14 +228,12 @@ impl MarkovJunior {
         for (x, y, pattern, rotation, is_canonical_key) in changes {
             self.apply_pattern(x, y, &pattern, rotation);
 
+            let x_range = Self::x_range(x, pattern.width, self.width);
+            let y_range = Self::x_range(y, pattern.height, self.height);
             if is_canonical_key {
-                self.update_canonical_forms(
-                    x,
-                    y,
-                    std::cmp::max(pattern.width, pattern.height),
-                    rule_index,
-                );
+                self.update_canonical_forms(&x_range, &x_range, rule_index);
             }
+            cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
         }
 
         applied
@@ -261,13 +256,12 @@ impl MarkovJunior {
         }
     }
 
-    fn update_canonical_forms(&mut self, x: usize, y: usize, size: usize, rule_index: usize) {
-        let from_x = x.saturating_sub(size - 1);
-        let to_x = std::cmp::min(x + size - 1, self.width - 1);
-
-        let from_y = y.saturating_sub(size - 1);
-        let to_y = std::cmp::min(y + size - 1, self.height - 1);
-
+    fn update_canonical_forms(
+        &mut self,
+        x_range: &Range<usize>,
+        y_range: &Range<usize>,
+        rule_index: usize,
+    ) {
         for pattern_index in 0..self.rules[rule_index].patterns.len() {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
 
@@ -278,8 +272,8 @@ impl MarkovJunior {
                 unreachable!();
             }
 
-            for dy in from_y..=to_y {
-                for dx in from_x..=to_x {
+            for dy in y_range.clone() {
+                for dx in x_range.clone() {
                     let index = dy * self.width + dx;
 
                     self.canonical_forms.get_mut(&canonical_key).unwrap()[index] =
@@ -331,10 +325,11 @@ impl MarkovJunior {
     pub fn compute_cache(
         &mut self,
         rule_index: usize,
-        x_range: Range<usize>,
-        y_range: Range<usize>,
+        x_range: &Range<usize>,
+        y_range: &Range<usize>,
     ) -> HashMap<(usize, usize), Vec<PatternMatch>> {
         y_range
+            .clone()
             .flat_map(|y| x_range.clone().map(move |x| (x, y)))
             .map(|(x, y)| {
                 let valid_patterns = self.rules[rule_index]
@@ -377,6 +372,13 @@ impl MarkovJunior {
             .iter()
             .flat_map(|(_k, pattern_matches)| pattern_matches)
             .collect()
+    }
+
+    fn x_range(x: usize, size: usize, grid_size: usize) -> Range<usize> {
+        let from_x = x.saturating_sub(size - 1);
+        let to_x = std::cmp::min(x + size, grid_size);
+
+        from_x..to_x
     }
 
     fn compute_cell_canonical_form(
