@@ -67,9 +67,8 @@ impl Pattern {
         let height = parts.len();
         let data = parts.join("").chars().collect::<Vec<char>>();
 
-        let (canonical_form, rotations, unique_rotations) =
+        let (maybe_canonical_form, rotations, unique_rotations) =
             Self::compute_canonical_form_and_rotations(&data, width, height);
-        let has_wildcards = data.iter().any(|&char| char == ANYTHING);
 
         Pattern {
             data,
@@ -77,11 +76,7 @@ impl Pattern {
             height,
             rotations,
             unique_rotations,
-            canonical_form: if has_wildcards || width != height {
-                None
-            } else {
-                Some(canonical_form)
-            },
+            canonical_form: maybe_canonical_form
         }
     }
 
@@ -89,8 +84,18 @@ impl Pattern {
         data: &[char],
         width: usize,
         height: usize,
-    ) -> (RotatedSeq, Vec<RotatedSeq>, Vec<RotatedSeq>) {
-        let rotations = [
+    ) -> (Option<RotatedSeq>, Vec<RotatedSeq>, Vec<RotatedSeq>) {
+        let has_wildcards = data.iter().any(|&char| char == ANYTHING);
+        if has_wildcards || (width == 1 && height == 1) {
+            let rotation = RotatedSeq {
+                data: data.to_vec(),
+                rotation: 1,
+            };
+
+            return (None, [rotation.clone()].to_vec(), [rotation].to_vec());
+        }
+
+        let rotations = vec![
             RotatedSeq {
                 data: data.to_vec(),
                 rotation: 1,
@@ -126,6 +131,7 @@ impl Pattern {
         ];
 
         let unique_rotations: Vec<RotatedSeq> = rotations
+            .clone()
             .into_iter()
             .map(|r| (r.data.clone(), r))
             .collect::<std::collections::HashMap<_, _>>()
@@ -149,7 +155,7 @@ impl Pattern {
             .unwrap()
             .clone();
 
-        (canonical_form, rotations, unique_rotations)
+        (Some(canonical_form), rotations, unique_rotations)
     }
 
     pub fn compute_canonical_form_mirrored(
