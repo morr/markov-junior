@@ -1,6 +1,6 @@
 use crate::*;
 use rand::Rng;
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Range};
 
 // #[cfg(feature = "parallel")]
 // use rayon::prelude::*;
@@ -56,7 +56,7 @@ impl MarkovJunior {
             let kind = rule.kind;
 
             self.precompute_canonical_forms(rule_index);
-            self.precompute_cache(rule_index);
+            self.precompute_cache(rule_index, 0..self.width, 0..self.height);
 
             for _step in 0..steps {
                 let any_change = match kind {
@@ -362,11 +362,16 @@ impl MarkovJunior {
         }
     }
 
-    pub fn precompute_cache(&mut self, rule_index: usize) {
+    pub fn precompute_cache(
+        &mut self,
+        rule_index: usize,
+        x_range: Range<usize>,
+        y_range: Range<usize>,
+    ) {
         let rule = &self.rules[rule_index];
 
-        self.cache = (0..self.height)
-            .flat_map(|y| (0..self.width).map(move |x| (x, y)))
+        self.cache = y_range
+            .flat_map(|y| x_range.clone().map(move |x| (x, y)))
             .map(|(x, y)| {
                 let valid_patterns = rule
                     .patterns
