@@ -35,6 +35,7 @@ impl PatternRule {
 pub struct RotatedSeq {
     pub data: Vec<char>,
     pub width: usize,
+    pub height: usize,
     pub rotation: isize, // 1, 2, 3, or 4 representing 0°, 90°, 180°, 270°, -1, -2, -3, or -4 representing mirrored 0°, 90°, 180°, 270°
 }
 
@@ -91,6 +92,7 @@ impl Pattern {
             let rotation = RotatedSeq {
                 data: data.to_vec(),
                 width: 1,
+                height: 1,
                 rotation: 1,
             };
 
@@ -101,41 +103,49 @@ impl Pattern {
             RotatedSeq {
                 data: data.to_vec(),
                 width,
+                height,
                 rotation: 1,
             },
             RotatedSeq {
                 data: Self::rotate_90(data, width, height),
                 width: height,
+                height: width,
                 rotation: 2,
             },
             RotatedSeq {
                 data: Self::rotate_180(data),
                 width,
+                height,
                 rotation: 3,
             },
             RotatedSeq {
                 data: Self::rotate_270(data, width, height),
                 width: height,
+                height: width,
                 rotation: 4,
             },
             RotatedSeq {
                 data: Self::mirror(data, width),
-                width: height,
+                width,
+                height,
                 rotation: -1,
             },
             RotatedSeq {
                 data: Self::rotate_90(&Self::mirror(data, width), width, height),
                 width: height,
+                height: width,
                 rotation: -2,
             },
             RotatedSeq {
                 data: Self::rotate_180(&Self::mirror(data, width)),
-                width: height,
+                width,
+                height,
                 rotation: -3,
             },
             RotatedSeq {
                 data: Self::rotate_270(&Self::mirror(data, width), width, height),
                 width: height,
+                height: width,
                 rotation: -4,
             },
         ];
