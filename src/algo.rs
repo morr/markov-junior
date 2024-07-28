@@ -322,9 +322,7 @@ impl MarkovJunior {
     }
 
     pub fn calculate_canonical_forms(&mut self, rule_index: usize) {
-        for pattern_index in 0..self.rules[rule_index].patterns.len() {
-            let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
-
+        for pattern_rule in self.rules[rule_index].patterns.iter() {
             let Some(canonical_key) = pattern_rule.canonical_key else {
                 continue;
             };
