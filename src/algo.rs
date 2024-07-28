@@ -311,7 +311,9 @@ impl MarkovJunior {
     // }
 
     pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
+        // println!("{:?}", pattern.rotations);
         let rotated_seq = pattern.rotations.iter().find(|&rotated_seq| rotated_seq.rotation == rotation).unwrap();
+        // println!("{:?}", rotated_seq);
 
         for (i, &pattern_char) in rotated_seq.data.iter().enumerate() {
             let px = i % pattern.width;
