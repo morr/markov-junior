@@ -106,7 +106,7 @@ impl Pattern {
         width: usize,
         height: usize,
     ) -> (RotatedSeq, Vec<RotatedSeq>) {
-        let rotations = vec![
+        let rotations = [
             RotatedSeq {
                 data: data.to_vec(),
                 rotation: 1,
@@ -140,9 +140,15 @@ impl Pattern {
                 rotation: -4,
             },
         ];
-        // println!("{:?}", rotations);
 
-        let canonical_form = rotations
+        let unique_rotations: Vec<RotatedSeq> = rotations
+            .into_iter()
+            .map(|r| (r.data.clone(), r))
+            .collect::<std::collections::HashMap<_, _>>()
+            .into_values()
+            .collect();
+
+        let canonical_form = unique_rotations
             .iter()
             .min_by(|a, b| {
                 let data_cmp = a
@@ -159,7 +165,7 @@ impl Pattern {
             .unwrap()
             .clone();
 
-        (canonical_form, rotations)
+        (canonical_form, unique_rotations)
     }
 
     pub fn compute_canonical_form_mirrored(
