@@ -52,32 +52,32 @@ fn test_canonical_form_rollback_rotation() {
     }
 }
 
-#[test]
-fn test_canonical_form_2() {
-    let pattern = Pattern::new("WG");
-    let canonical_form_2 = pattern.canonical_form_2.unwrap();
-    assert_eq!(
-        canonical_form_2,
-        RotatedSeq {
-            data: #[rustfmt::skip] vec![
-                'G', ANYTHING,
-                'W', ANYTHING
-            ],
-            rotation: 4
-        }
-    );
-    // println!("{:?} rotation:{:?}", canonical_form_2.data, canonical_form_2.rotation);
-    // println!("{:?}", pattern.rotations);
-    assert_eq!(
-        Pattern::rollback_rotation(
-            &canonical_form_2.data,
-            pattern.width,
-            pattern.height,
-            canonical_form_2.rotation
-        ),
-        pattern.data
-    );
-}
+// #[test]
+// fn test_canonical_form_2() {
+//     let pattern = Pattern::new("WG");
+//     let canonical_form_2 = pattern.canonical_form_2.unwrap();
+//     assert_eq!(
+//         canonical_form_2,
+//         RotatedSeq {
+//             data: #[rustfmt::skip] vec![
+//                 'G', ANYTHING,
+//                 'W', ANYTHING
+//             ],
+//             rotation: 4
+//         }
+//     );
+//     // println!("{:?} rotation:{:?}", canonical_form_2.data, canonical_form_2.rotation);
+//     // println!("{:?}", pattern.rotations);
+//     assert_eq!(
+//         Pattern::rollback_rotation(
+//             &canonical_form_2.data,
+//             pattern.width,
+//             pattern.height,
+//             canonical_form_2.rotation
+//         ),
+//         pattern.data
+//     );
+// }
 
 #[test]
 fn test_start_converted_to_u8_max_so_it_sorted_to_the_bottom() {

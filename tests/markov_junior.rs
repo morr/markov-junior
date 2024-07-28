@@ -270,7 +270,7 @@ fn test_generate() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.print_grid();
+    // mj.print_grid();
     mj.generate();
     // mj.print_grid();
 

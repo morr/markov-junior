@@ -59,7 +59,7 @@ pub struct Pattern {
     pub height: usize,
     pub rotations: Vec<RotatedSeq>,
     pub canonical_form: RotatedSeq,
-    pub canonical_form_2: Option<RotatedSeq>,
+    // pub canonical_form_2: Option<RotatedSeq>,
 }
 
 impl Pattern {
@@ -80,16 +80,16 @@ impl Pattern {
         let (canonical_form, rotations) =
             Self::compute_canonical_form(&data, square_size, square_size);
 
-        let canonical_form_2 = if original_width != original_height {
-            Some(Self::compute_canonical_form_mirrored(
-                &canonical_form.data,
-                square_size,
-                square_size,
-                &rotations,
-            ))
-        } else {
-            None
-        };
+        // let canonical_form_2 = if original_width != original_height {
+        //     Some(Self::compute_canonical_form_mirrored(
+        //         &canonical_form.data,
+        //         square_size,
+        //         square_size,
+        //         &rotations,
+        //     ))
+        // } else {
+        //     None
+        // };
 
         Pattern {
             data,
@@ -97,7 +97,7 @@ impl Pattern {
             height: square_size,
             rotations,
             canonical_form,
-            canonical_form_2,
+            // canonical_form_2,
         }
     }
 

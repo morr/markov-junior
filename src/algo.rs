@@ -106,8 +106,8 @@ impl MarkovJunior {
                 let index = y * self.width + x;
                 let grid_canonical_form = &precalculated_forms[index];
 
-                println!("\npattern: {:?}", pattern);
-                println!("grid_canonical_form: {:?}", grid_canonical_form);
+                // println!("\npattern: {:?}", pattern);
+                // println!("grid_canonical_form: {:?}", grid_canonical_form);
 
                 if self.compare_canonical_forms(&grid_canonical_form.data, &pattern.canonical_form.data) {
                     Some(pattern.canonical_form.rotation)
