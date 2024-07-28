@@ -47,9 +47,7 @@ pub struct PatternMatch {
 }
 
 pub const PATTERN_DELIMITER: char = '/';
-// pub const ANYTHING: char = '*';
-pub const ANYTHING_INPUT: char = '*';
-pub const ANYTHING: char = u8::MAX as char; // the value is set to make it to be sorted to the bottom
+pub const ANYTHING: char = '*';
 pub const NOTHING: char = '❌';
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -58,46 +56,29 @@ pub struct Pattern {
     pub width: usize,
     pub height: usize,
     pub rotations: Vec<RotatedSeq>,
-    pub canonical_form: RotatedSeq,
-    // pub canonical_form_2: Option<RotatedSeq>,
+    pub canonical_form: Option<RotatedSeq>,
 }
 
 impl Pattern {
     pub fn new(line: &str) -> Self {
         let parts: Vec<&str> = line.split(PATTERN_DELIMITER).collect();
-        let original_width = parts[0].len();
-        let original_height = parts.len();
-        let square_size = std::cmp::max(original_width, original_height);
+        let width = parts[0].len();
+        let height = parts.len();
+        let data = parts.join("").chars().collect::<Vec<char>>();
 
-        let mut data = vec![ANYTHING; square_size * square_size];
-
-        for (y, part) in parts.iter().enumerate() {
-            for (x, c) in part.chars().enumerate() {
-                data[y * square_size + x] = if c == ANYTHING_INPUT { ANYTHING } else { c };
-            }
-        }
-
-        let (canonical_form, rotations) =
-            Self::compute_canonical_form(&data, square_size, square_size);
-
-        // let canonical_form_2 = if original_width != original_height {
-        //     Some(Self::compute_canonical_form_mirrored(
-        //         &canonical_form.data,
-        //         square_size,
-        //         square_size,
-        //         &rotations,
-        //     ))
-        // } else {
-        //     None
-        // };
+        let (canonical_form, rotations) = Self::compute_canonical_form(&data, width, height);
+        let has_wildcards = data.iter().any(|&char| char == ANYTHING);
 
         Pattern {
             data,
-            width: square_size,
-            height: square_size,
+            width,
+            height,
             rotations,
-            canonical_form,
-            // canonical_form_2,
+            canonical_form: if has_wildcards {
+                Some(canonical_form)
+            } else {
+                None
+            },
         }
     }
 
