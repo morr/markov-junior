@@ -284,25 +284,38 @@ impl MarkovJunior {
         applied
     }
 
+    // pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
+    //     let rotated_output = Pattern::rollback_rotation(
+    //         &pattern.canonical_form.data,
+    //         pattern.width,
+    //         pattern.height,
+    //         rotation,
+    //     );
+    //     let width = match rotation.abs() {
+    //         1 | 3 => pattern.width,
+    //         2 | 4 => pattern.height,
+    //         _ => unreachable!(),
+    //     };
+    //
+    //     // println!("rotated_output: {:?}, rotation:{rotation}", rotated_output);
+    //
+    //     for (i, &pattern_char) in rotated_output.iter().enumerate() {
+    //         let px = i % width;
+    //         let py = i / width;
+    //
+    //         if pattern_char != ANYTHING {
+    //             let index = (y + py) * self.width + (x + px);
+    //             self.grid[index] = pattern_char as u8;
+    //         }
+    //     }
+    // }
+
     pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
-        let rotated_output = Pattern::rollback_rotation(
-            &pattern.canonical_form.data,
-            pattern.width,
-            pattern.height,
-            rotation,
-        );
-        let width = match rotation.abs() {
-            1 | 3 => pattern.width,
-            2 | 4 => pattern.height,
-            _ => unreachable!(),
-        };
+        let rotated_seq = pattern.rotations.iter().find(|&rotated_seq| rotated_seq.rotation == rotation).unwrap();
 
-        // println!("rotated_output: {:?}, rotation:{rotation}", rotated_output);
-
-        for (i, &pattern_char) in rotated_output.iter().enumerate() {
-            let px = i % width;
-            let py = i / width;
-
+        for (i, &pattern_char) in rotated_seq.data.iter().enumerate() {
+            let px = i % pattern.width;
+            let py = i / pattern.width;
             if pattern_char != ANYTHING {
                 let index = (y + py) * self.width + (x + px);
                 self.grid[index] = pattern_char as u8;
@@ -427,6 +440,6 @@ impl MarkovJunior {
                 }
             }
         }
-        Pattern::compute_canonical_form_and_rotations(&data, pattern_width, pattern_height).0
+        Pattern::compute_canonical_form_and_rotations(&data, pattern_width, pattern_height).0.unwrap()
     }
 }
