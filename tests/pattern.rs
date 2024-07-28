@@ -11,6 +11,9 @@ fn test_patterns_have_no_canonical_form() {
 
     let pattern = Pattern::new("WW/B*");
     assert!(pattern.canonical_form.is_none());
+
+    let pattern = Pattern::new("A*/C*");
+    assert!(pattern.canonical_form.is_none());
 }
 
 #[test]
@@ -44,7 +47,6 @@ fn test_rollback_rotation() {
     );
 
     for rotated_data in pattern.rotations {
-        println!("{}", rotated_data.rotation);
         assert_eq!(
             Pattern::rollback_rotation(
                 &rotated_data.data,
@@ -55,6 +57,26 @@ fn test_rollback_rotation() {
             pattern.data
         );
     }
+}
+
+#[test]
+fn test_square_pattern_2x2() {
+    let pattern = Pattern::new("AB/CD");
+    assert_eq!(pattern.width, 2);
+    assert_eq!(pattern.height, 2);
+    assert_eq!(pattern.data, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(pattern.rotations.len(), 8);
+    assert_eq!(pattern.unique_rotations.len(), 8);
+}
+
+#[test]
+fn test_square_pattern_2x2_with_wildcards() {
+    let pattern = Pattern::new("A*/C*");
+    assert_eq!(pattern.width, 2);
+    assert_eq!(pattern.height, 2);
+    assert_eq!(pattern.data, vec!['A', ANYTHING, 'C', ANYTHING]);
+    assert_eq!(pattern.rotations.len(), 8);
+    assert_eq!(pattern.unique_rotations.len(), 8);
 }
 
 #[test]
