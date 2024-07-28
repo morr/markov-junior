@@ -2,7 +2,7 @@ use markov_junior::*;
 
 fn main() {
     let xml = r#"
-    <sequence value="B" width="85" height="85">
+    <sequence value="B" width="50" height="50">
       <one in="B" out="W" steps="1"/>
       <one in="B" out="R" steps="1"/>
       <one>
