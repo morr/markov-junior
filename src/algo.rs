@@ -12,10 +12,10 @@ pub struct MarkovJunior {
     pub rules: Vec<Rule>,
     pub canonical_forms: HashMap<(usize, usize), Vec<RotatedSeq>>,
     /// pattern_index: usize is a key
-    pub cache: HashMap<(usize, usize), Vec<PatternMatch>>,
+    // pub cache: HashMap<(usize, usize), Vec<PatternMatch>>,
     // pub inverse_cache: HashMap<usize, Vec<PatternMatch>>,
-    // pub cache: HashMap<(usize, usize), Vec<Vec<char>>>,
-    // pub inverse_cache: HashMap<usize, Vec<PatternMatch>>,
+    pub cache: HashMap<usize, Vec<PatternMatch>>,
+    // pub point_cache: HashMap<(usize, usize), Vec<PatternMatch>>,
 }
 
 impl MarkovJunior {
@@ -56,7 +56,7 @@ impl MarkovJunior {
             let kind = rule.kind;
 
             self.precompute_canonical_forms(rule_index);
-            self.cache = self.compute_cache(rule_index, 0..self.width, 0..self.height);
+            self.compute_cache(rule_index, 0..self.width, 0..self.height);
 
             for _step in 0..steps {
                 let any_change = match kind {
@@ -370,36 +370,45 @@ impl MarkovJunior {
         rule_index: usize,
         x_range: Range<usize>,
         y_range: Range<usize>,
-    ) -> HashMap<(usize, usize), Vec<PatternMatch>> {
+    ) {
         let rule = &self.rules[rule_index];
 
-        y_range
-            .flat_map(|y| x_range.clone().map(move |x| (x, y)))
-            .map(|(x, y)| {
-                let valid_patterns = rule
-                    .patterns
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(pattern_index, pattern_rule)| {
-                        let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
-                            self.pattern_fits_canonical(x, y, &pattern_rule.input)
-                        } else {
-                            self.pattern_fits(x, y, &pattern_rule.input)
-                        };
+        // let cache: HashMap<(usize, usize), Vec<PatternMatch>> = y_range
+        //     .flat_map(|y| x_range.clone().map(move |x| (x, y)))
+        //     .map(|(x, y)| {
+        //         let valid_patterns = rule
+        //             .patterns
+        //             .iter()
+        //             .enumerate()
+        //             .filter_map(|(pattern_index, pattern_rule)| {
+        //                 let maybe_pattern_match = if pattern_rule.input.canonical_form.is_some() {
+        //                     self.pattern_fits_canonical(x, y, &pattern_rule.input)
+        //                 } else {
+        //                     self.pattern_fits(x, y, &pattern_rule.input)
+        //                 };
+        //
+        //                 maybe_pattern_match.map(|rotation| PatternMatch {
+        //                     x,
+        //                     y,
+        //                     weight: pattern_rule.weight,
+        //                     pattern_index,
+        //                     rotation,
+        //                 })
+        //             })
+        //             .collect::<Vec<_>>();
+        //
+        //         ((x, y), valid_patterns)
+        //     })
+        //     .collect();
 
-                        maybe_pattern_match.map(|rotation| PatternMatch {
-                            x,
-                            y,
-                            weight: pattern_rule.weight,
-                            pattern_index,
-                            rotation,
-                        })
-                    })
-                    .collect::<Vec<_>>();
-
-                ((x, y), valid_patterns)
-            })
-            .collect::<HashMap<(usize, usize), Vec<PatternMatch>>>()
+        // let cache: HashMap<(usize, usize), Vec<PatternMatch>> = y_range
+        // self.cache.exten
+        //     y_range
+        //     .flat_map(|y| x_range.clone().map(move |x| (x, y)))
+        //     .map(|(x, y)| {
+        //         ((x, y), vec![])
+        //     })
+        //     .collect();
 
         // self.cache = rule
         //     .patterns
@@ -444,7 +453,7 @@ impl MarkovJunior {
         //                         pattern_index,
         //                         rotation,
         //                     })
-        //            } else {
+        //             } else {
         //                 self.pattern_fits(x, y, &pattern_rule.input)
         //                     .map(|rotation| PatternMatch {
         //                         x,
@@ -461,7 +470,7 @@ impl MarkovJunior {
         //         }
         //     }
         //
-        //     self.cache.insert(pattern_index, valid_patterns);
+        //     // self.cache.insert(pattern_index, valid_patterns);
         // }
     }
 
