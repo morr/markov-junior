@@ -137,27 +137,25 @@ impl MarkovJunior {
             .sum();
         let mut choice = rng.gen::<f32>() * total_weight;
 
-        for &PatternMatch {
-            x,
-            y,
-            weight,
-            pattern_index,
-            rotation,
-        } in valid_patterns
-        {
-            choice -= weight;
+        for pattern_match in valid_patterns {
+            choice -= pattern_match.weight;
 
             if choice <= 0.0 {
-                let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
+                let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
                 let pattern = &pattern_rule.output.clone();
                 let is_canonical_key = pattern_rule.canonical_key.is_some();
 
-                self.apply_pattern(x, y, pattern, rotation);
+                self.apply_pattern(
+                    pattern_match.x,
+                    pattern_match.y,
+                    pattern,
+                    pattern_match.rotation,
+                );
 
                 if is_canonical_key {
                     self.update_canonical_forms(
-                        x,
-                        y,
+                        pattern_match.x,
+                        pattern_match.y,
                         std::cmp::max(pattern.width, pattern.height),
                         rule_index,
                     );
@@ -178,23 +176,21 @@ impl MarkovJunior {
         let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
 
-        for &PatternMatch {
-            x,
-            y,
-            pattern_index,
-            rotation,
-            ..
-        } in valid_patterns
-        {
-            let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
+        for pattern_match in valid_patterns {
+            let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
             let pattern = pattern_rule.output.clone();
             let is_canonical_key = pattern_rule.canonical_key.is_some();
 
-            self.apply_pattern(x, y, &pattern, rotation);
+            self.apply_pattern(
+                pattern_match.x,
+                pattern_match.y,
+                &pattern,
+                pattern_match.rotation,
+            );
             if is_canonical_key {
                 self.update_canonical_forms(
-                    x,
-                    y,
+                    pattern_match.x,
+                    pattern_match.y,
                     std::cmp::max(pattern.width, pattern.height),
                     rule_index,
                 );
@@ -216,25 +212,25 @@ impl MarkovJunior {
         let mut applied = false;
         let mut changes = Vec::new();
 
-        for &PatternMatch {
-            x,
-            y,
-            pattern_index,
-            rotation,
-            ..
-        } in valid_patterns
-        {
+        for pattern_match in valid_patterns {
             if rng.gen_bool(0.5) {
-                let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
+                let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
                 let output = pattern_rule.output.clone();
 
-                changes.push((x, y, output, rotation, pattern_rule.canonical_key.is_some()));
+                changes.push((
+                    pattern_match.x,
+                    pattern_match.y,
+                    output,
+                    pattern_match.rotation,
+                    pattern_rule.canonical_key.is_some(),
+                ));
                 applied = true;
             }
         }
 
         for (x, y, pattern, rotation, is_canonical_key) in changes {
             self.apply_pattern(x, y, &pattern, rotation);
+
             if is_canonical_key {
                 self.update_canonical_forms(
                     x,
@@ -376,7 +372,7 @@ impl MarkovJunior {
         }
     }
 
-    fn cached_patterns(cache: HashMap<(usize, usize), Vec<PatternMatch>>) -> Vec<PatternMatch> {
+    fn cached_patterns(cache: &HashMap<(usize, usize), Vec<PatternMatch>>) -> Vec<&PatternMatch> {
         cache
             .iter()
             .flat_map(|(_k, pattern_matches)| pattern_matches)
