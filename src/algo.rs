@@ -53,9 +53,7 @@ impl MarkovJunior {
                 let any_change = match kind {
                     RuleKind::One => self.apply_one_rule(&mut rng, rule_index, &mut cache),
                     RuleKind::All => self.apply_all_rule(rule_index, &mut cache),
-                    RuleKind::Parallel => {
-                        self.apply_parallel_rule(&mut rng, rule_index, &mut cache)
-                    }
+                    RuleKind::Parallel => self.apply_parallel_rule(rule_index, &mut cache),
                 };
 
                 if !any_change {
@@ -201,7 +199,6 @@ impl MarkovJunior {
 
     fn apply_parallel_rule(
         &mut self,
-        rng: &mut impl Rng,
         rule_index: usize,
         cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
@@ -210,19 +207,17 @@ impl MarkovJunior {
         let mut changes = Vec::new();
 
         for pattern_match in valid_patterns {
-            if rng.gen_bool(0.5) {
-                let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
-                let output = pattern_rule.output.clone();
+            let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
+            let output = pattern_rule.output.clone();
 
-                changes.push((
-                    pattern_match.x,
-                    pattern_match.y,
-                    output,
-                    pattern_match.rotation,
-                    pattern_rule.canonical_key.is_some(),
-                ));
-                applied = true;
-            }
+            changes.push((
+                pattern_match.x,
+                pattern_match.y,
+                output,
+                pattern_match.rotation,
+                pattern_rule.canonical_key.is_some(),
+            ));
+            applied = true;
         }
 
         for (x, y, pattern, rotation, is_canonical_key) in changes {
