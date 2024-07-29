@@ -171,6 +171,7 @@ impl MarkovJunior {
     ) -> bool {
         let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
+        let mut changes = Vec::new();
 
         for pattern_match in valid_patterns {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
@@ -183,15 +184,23 @@ impl MarkovJunior {
                 &pattern,
                 pattern_match.rotation,
             );
+            changes.push((
+                pattern_match.x,
+                pattern_match.y,
+                pattern.width,
+                pattern.height,
+                is_canonical_key,
+            ));
+            applied = true;
+        }
 
-            let x_range = Self::x_range(pattern_match.x, pattern.width, self.width);
-            let y_range = Self::x_range(pattern_match.y, pattern.height, self.height);
+        for (x, y, pattern_width, pattern_height, is_canonical_key) in changes {
+            let x_range = Self::x_range(x, pattern_width, self.width);
+            let y_range = Self::x_range(y, pattern_height, self.height);
             if is_canonical_key {
                 self.update_canonical_forms(&x_range, &x_range, rule_index);
             }
             cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
-
-            applied = true;
         }
 
         applied
