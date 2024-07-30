@@ -60,6 +60,8 @@ impl MarkovJunior {
                     break;
                 }
             }
+            // println!("\nrule_index: {rule_index}\n");
+            // self.print_grid();
         }
     }
 
@@ -150,8 +152,9 @@ impl MarkovJunior {
                     pattern_match.rotation,
                 );
 
-                let x_range = Self::x_range(pattern_match.x, pattern.width, self.width);
-                let y_range = Self::x_range(pattern_match.y, pattern.height, self.height);
+                let size = std::cmp::max(pattern.width, pattern.height);
+                let x_range = Self::x_range(pattern_match.x, size, self.width);
+                let y_range = Self::x_range(pattern_match.y, size, self.height);
                 if is_canonical_key {
                     self.update_canonical_forms(&x_range, &y_range, rule_index);
                 }
