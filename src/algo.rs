@@ -335,7 +335,7 @@ impl MarkovJunior {
     }
 
     pub fn compute_cache(
-        &mut self,
+        &self,
         rule_index: usize,
         x_range: &Range<usize>,
         y_range: &Range<usize>,
