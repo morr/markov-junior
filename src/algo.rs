@@ -125,20 +125,20 @@ impl MarkovJunior {
         rule_index: usize,
         cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
-        let valid_patterns = Self::cached_patterns(cache);
+        let total_weight: f32 = cache.iter().fold(0.0, |memo, (_, pattern_matches)| {
+            pattern_matches
+                .iter()
+                .fold(memo, |memo2, pattern_match| memo2 + pattern_match.weight)
+        });
 
-        if valid_patterns.is_empty() {
+        if total_weight == 0.0 {
             return false;
         }
 
-        let total_weight: f32 = valid_patterns
-            .iter()
-            .map(|pattern_match| pattern_match.weight)
-            .sum();
         let mut choice = rng.gen::<f32>() * total_weight;
         let mut selected_change = None;
 
-        for pattern_match in valid_patterns {
+        for pattern_match in Self::cache_iter(cache) {
             choice -= pattern_match.weight;
 
             if choice <= 0.0 {
@@ -179,11 +179,10 @@ impl MarkovJunior {
         rule_index: usize,
         cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
-        let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
         let mut changes = Vec::new();
 
-        for pattern_match in valid_patterns {
+        for pattern_match in Self::cache_iter(cache) {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
             let pattern = pattern_rule.output.clone();
             let is_canonical_key = pattern_rule.canonical_key.is_some();
@@ -221,11 +220,10 @@ impl MarkovJunior {
         rule_index: usize,
         cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
-        let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
         let mut changes = Vec::new();
 
-        for pattern_match in valid_patterns {
+        for pattern_match in Self::cache_iter(cache) {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
             let output = pattern_rule.output.clone();
 
@@ -381,18 +379,20 @@ impl MarkovJunior {
         }
     }
 
-    fn cached_patterns(cache: &HashMap<(usize, usize), Vec<PatternMatch>>) -> Vec<&PatternMatch> {
-        cache
-            .iter()
-            .flat_map(|(_k, pattern_matches)| pattern_matches)
-            .collect()
-    }
-
-    // fn cached_patterns(
-    //     cache: &HashMap<(usize, usize), Vec<PatternMatch>>,
-    // ) -> impl Iterator<Item = &PatternMatch> {
-    //     cache.values().flat_map(|pattern_matches| pattern_matches.iter())
+    // fn cached_patterns(cache: &HashMap<(usize, usize), Vec<PatternMatch>>) -> Vec<&PatternMatch> {
+    //     cache
+    //         .iter()
+    //         .flat_map(|(_k, pattern_matches)| pattern_matches)
+    //         .collect()
     // }
+
+    fn cache_iter(
+        cache: &HashMap<(usize, usize), Vec<PatternMatch>>,
+    ) -> impl Iterator<Item = &PatternMatch> {
+        cache
+            .values()
+            .flat_map(|pattern_matches| pattern_matches.iter())
+    }
 
     fn x_range(x: usize, size: usize, grid_size: usize) -> Range<usize> {
         let from_x = x.saturating_sub(size - 1);
