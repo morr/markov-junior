@@ -125,49 +125,46 @@ impl MarkovJunior {
         rule_index: usize,
         cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
-        let total_weight: f32 = Self::cached_patterns(cache).map(|pm| pm.weight).sum();
+        let valid_patterns = Self::cached_patterns(cache);
 
-        if total_weight == 0.0 {
+        if valid_patterns.is_empty() {
             return false;
         }
 
+        let total_weight: f32 = valid_patterns
+            .iter()
+            .map(|pattern_match| pattern_match.weight)
+            .sum();
         let mut choice = rng.gen::<f32>() * total_weight;
-        let mut selected_change = None;
 
-        for pattern_match in Self::cached_patterns(cache) {
+        for pattern_match in valid_patterns {
             choice -= pattern_match.weight;
 
             if choice <= 0.0 {
                 let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
-                let pattern = pattern_rule.output.clone();
+                let pattern = &pattern_rule.output.clone();
                 let is_canonical_key = pattern_rule.canonical_key.is_some();
 
-                selected_change = Some((
+                self.apply_pattern(
                     pattern_match.x,
                     pattern_match.y,
                     pattern,
                     pattern_match.rotation,
-                    is_canonical_key,
-                ));
-                break;
+                );
+
+                let size = std::cmp::max(pattern.width, pattern.height);
+                let x_range = Self::x_range(pattern_match.x, size, self.width);
+                let y_range = Self::x_range(pattern_match.y, size, self.height);
+                if is_canonical_key {
+                    self.update_canonical_forms(&x_range, &y_range, rule_index);
+                }
+                cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
+
+                return true;
             }
         }
 
-        if let Some((x, y, pattern, rotation, is_canonical_key)) = selected_change {
-            self.apply_pattern(x, y, &pattern, rotation);
-
-            let size = std::cmp::max(pattern.width, pattern.height);
-            let x_range = Self::x_range(x, size, self.width);
-            let y_range = Self::x_range(y, size, self.height);
-            if is_canonical_key {
-                self.update_canonical_forms(&x_range, &y_range, rule_index);
-            }
-            cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
-
-            true
-        } else {
-            false
-        }
+        false
     }
 
     fn apply_all_rule(
@@ -175,10 +172,11 @@ impl MarkovJunior {
         rule_index: usize,
         cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
+        let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
         let mut changes = Vec::new();
 
-        for pattern_match in Self::cached_patterns(cache) {
+        for pattern_match in valid_patterns {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
             let pattern = pattern_rule.output.clone();
             let is_canonical_key = pattern_rule.canonical_key.is_some();
@@ -216,10 +214,11 @@ impl MarkovJunior {
         rule_index: usize,
         cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
+        let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
         let mut changes = Vec::new();
 
-        for pattern_match in Self::cached_patterns(cache) {
+        for pattern_match in valid_patterns {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
             let output = pattern_rule.output.clone();
 
@@ -375,17 +374,11 @@ impl MarkovJunior {
         }
     }
 
-    fn cached_patterns(
-        cache: &HashMap<(usize, usize), Vec<PatternMatch>>,
-    ) -> impl Iterator<Item = &PatternMatch> {
+    fn cached_patterns(cache: &HashMap<(usize, usize), Vec<PatternMatch>>) -> Vec<&PatternMatch> {
         cache
-            .values()
-            .flat_map(|pattern_matches| pattern_matches.iter())
-
-        // cache
-        //     .iter()
-        //     .flat_map(|(_k, pattern_matches)| pattern_matches)
-        //     .collect()
+            .iter()
+            .flat_map(|(_k, pattern_matches)| pattern_matches)
+            .collect()
     }
 
     fn x_range(x: usize, size: usize, grid_size: usize) -> Range<usize> {
