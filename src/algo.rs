@@ -136,32 +136,39 @@ impl MarkovJunior {
             .map(|pattern_match| pattern_match.weight)
             .sum();
         let mut choice = rng.gen::<f32>() * total_weight;
+        let mut selected_change = None;
 
         for pattern_match in valid_patterns {
             choice -= pattern_match.weight;
 
             if choice <= 0.0 {
                 let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
-                let pattern = &pattern_rule.output.clone();
+                let pattern = pattern_rule.output.clone();
                 let is_canonical_key = pattern_rule.canonical_key.is_some();
 
-                self.apply_pattern(
+                selected_change = Some((
                     pattern_match.x,
                     pattern_match.y,
                     pattern,
                     pattern_match.rotation,
-                );
-
-                let size = std::cmp::max(pattern.width, pattern.height);
-                let x_range = Self::x_range(pattern_match.x, size, self.width);
-                let y_range = Self::x_range(pattern_match.y, size, self.height);
-                if is_canonical_key {
-                    self.update_canonical_forms(&x_range, &y_range, rule_index);
-                }
-                cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
-
-                return true;
+                    is_canonical_key,
+                ));
+                break;
             }
+        }
+
+        if let Some((x, y, pattern, rotation, is_canonical_key)) = selected_change {
+            self.apply_pattern(x, y, &pattern, rotation);
+
+            let size = std::cmp::max(pattern.width, pattern.height);
+            let x_range = Self::x_range(x, size, self.width);
+            let y_range = Self::x_range(y, size, self.height);
+            if is_canonical_key {
+                self.update_canonical_forms(&x_range, &y_range, rule_index);
+            }
+            cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
+
+            return true;
         }
 
         false
@@ -380,6 +387,12 @@ impl MarkovJunior {
             .flat_map(|(_k, pattern_matches)| pattern_matches)
             .collect()
     }
+
+    // fn cached_patterns(
+    //     cache: &HashMap<(usize, usize), Vec<PatternMatch>>,
+    // ) -> impl Iterator<Item = &PatternMatch> {
+    //     cache.values().flat_map(|pattern_matches| pattern_matches.iter())
+    // }
 
     fn x_range(x: usize, size: usize, grid_size: usize) -> Range<usize> {
         let from_x = x.saturating_sub(size - 1);
