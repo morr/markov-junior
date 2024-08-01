@@ -1,12 +1,13 @@
 use crate::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum RuleKind {
     One,
     All,
     Parallel,
 }
 
+#[derive(Debug)]
 pub struct Rule {
     pub patterns: Vec<PatternRule>,
     pub kind: RuleKind,

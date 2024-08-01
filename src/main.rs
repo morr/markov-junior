@@ -65,6 +65,6 @@ fn main() {
     } else {
         mj.print_grid();
     }
-    println!(" seed: {}", mj.seed);
-    println!(" patterns_applied: {}", mj.patterns_applied_counter);
+    println!("seed: {}", mj.seed);
+    println!("patterns_applied: {}", mj.patterns_applied_counter);
 }

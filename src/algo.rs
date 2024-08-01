@@ -73,7 +73,7 @@ impl MarkovJunior {
                     break;
                 }
             }
-            println!(" rule: {rule_index} patterns_applied: {}", self.patterns_applied_counter - current_patterns_applied_counter);
+            println!("rule: {rule_index} patterns_applied: {}", self.patterns_applied_counter - current_patterns_applied_counter);
             // self.print_grid();
         }
     }
