@@ -27,13 +27,12 @@ fn main() {
 
     let mut markov = parse_xml(xml);
 
-    let guard = pprof::ProfilerGuard::new(4999).unwrap();
+    // let guard = pprof::ProfilerGuard::new(4999).unwrap();
     markov.generate();
-    if let Ok(report) = guard.report().build() {
-        let file = std::fs::File::create("/tmp/flamesvg").unwrap();
-        report.flamegraph(file).unwrap();
-    }
-
+    // if let Ok(report) = guard.report().build() {
+    //     let file = std::fs::File::create("/tmp/flamesvg").unwrap();
+    //     report.flamegraph(file).unwrap();
+    // }
 
     markov.print_grid();
 }
