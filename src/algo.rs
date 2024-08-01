@@ -1,7 +1,7 @@
 use crate::*;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
-use std::{collections::HashMap, ops::Range, fs::OpenOptions, io::Write};
+use std::{collections::BTreeMap, fs::OpenOptions, io::Write, ops::Range};
 
 // #[cfg(feature = "parallel")]
 // use rayon::prelude::*;
@@ -11,7 +11,7 @@ pub struct MarkovJunior {
     pub width: usize,
     pub height: usize,
     pub rules: Vec<Rule>,
-    pub canonical_forms: HashMap<(usize, usize), Vec<RotatedSeq>>,
+    pub canonical_forms: BTreeMap<(usize, usize), Vec<RotatedSeq>>,
     pub patterns_applied_counter: usize,
     pub rng: ChaCha8Rng,
     pub seed: u64,
@@ -26,7 +26,7 @@ impl MarkovJunior {
             width,
             height,
             rules: Vec::new(),
-            canonical_forms: HashMap::new(),
+            canonical_forms: BTreeMap::new(),
             patterns_applied_counter: 0,
             rng: ChaCha8Rng::seed_from_u64(seed),
             seed,
@@ -41,7 +41,7 @@ impl MarkovJunior {
             width,
             height,
             rules: Vec::new(),
-            canonical_forms: HashMap::new(),
+            canonical_forms: BTreeMap::new(),
             patterns_applied_counter: 0,
             rng: ChaCha8Rng::seed_from_u64(seed),
             seed,
@@ -73,7 +73,10 @@ impl MarkovJunior {
                     break;
                 }
             }
-            println!("rule: {rule_index} patterns_applied: {}", self.patterns_applied_counter - current_patterns_applied_counter);
+            println!(
+                "rule: {rule_index} patterns_applied: {}",
+                self.patterns_applied_counter - current_patterns_applied_counter
+            );
             // self.print_grid();
         }
     }
@@ -135,7 +138,7 @@ impl MarkovJunior {
     fn apply_one_rule(
         &mut self,
         rule_index: usize,
-        cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
+        cache: &mut BTreeMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
         let valid_patterns = Self::cached_patterns(cache);
 
@@ -189,7 +192,7 @@ impl MarkovJunior {
     fn apply_all_rule(
         &mut self,
         rule_index: usize,
-        cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
+        cache: &mut BTreeMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
         let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
@@ -231,7 +234,7 @@ impl MarkovJunior {
     fn apply_parallel_rule(
         &mut self,
         rule_index: usize,
-        cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
+        cache: &mut BTreeMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
         let valid_patterns = Self::cached_patterns(cache);
         let mut applied = false;
@@ -355,7 +358,7 @@ impl MarkovJunior {
         rule_index: usize,
         x_range: &Range<usize>,
         y_range: &Range<usize>,
-    ) -> HashMap<(usize, usize), Vec<PatternMatch>> {
+    ) -> BTreeMap<(usize, usize), Vec<PatternMatch>> {
         y_range
             .clone()
             .flat_map(|y| x_range.clone().map(move |x| (x, y)))
@@ -412,7 +415,7 @@ impl MarkovJunior {
         Ok(())
     }
 
-    fn cached_patterns(cache: &HashMap<(usize, usize), Vec<PatternMatch>>) -> Vec<&PatternMatch> {
+    fn cached_patterns(cache: &BTreeMap<(usize, usize), Vec<PatternMatch>>) -> Vec<&PatternMatch> {
         cache
             .iter()
             .flat_map(|(_k, pattern_matches)| pattern_matches)
