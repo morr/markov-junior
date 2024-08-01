@@ -1,10 +1,6 @@
 ## how to run
 ```sh
-cargo run | pattern-to-png 10x | imgcat
-```
-
-```sh
- cargo run --release | pattern-to-png 1x | imgcat --width=150 --height 50
+cargo build --release && time cargo run --release -- -o output.txt && cat output.txt | pattern-to-png 1x | imgcat --width=50 --height 25
 ```
 
 ## profile

@@ -1,7 +1,7 @@
 use crate::*;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
-use std::{collections::HashMap, ops::Range};
+use std::{collections::HashMap, ops::Range, fs::OpenOptions, io::Write};
 
 // #[cfg(feature = "parallel")]
 // use rayon::prelude::*;
@@ -391,6 +391,23 @@ impl MarkovJunior {
             }
             println!();
         }
+    }
+
+    pub fn log_grid(&self, filename: String) -> std::io::Result<()> {
+        let mut file = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .create(true)
+            .open(filename)?;
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                write!(file, "{}", self.grid[y * self.width + x] as char)?;
+            }
+            writeln!(file)?;
+        }
+
+        Ok(())
     }
 
     // fn cached_patterns(cache: &HashMap<(usize, usize), Vec<PatternMatch>>) -> Vec<&PatternMatch> {

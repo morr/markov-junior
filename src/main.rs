@@ -1,8 +1,30 @@
 use markov_junior::*;
+use std::env;
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    let seed = args.get(1).and_then(|s| s.parse().ok());
+    let args: Vec<String> = env::args().collect();
+    let mut maybe_seed = None;
+    let mut maybe_output_file = None;
+
+    let mut i = 1;
+    while i < args.len() {
+        match args[i].as_str() {
+            "-s" => {
+                if i + 1 < args.len() {
+                    maybe_seed = args[i + 1].parse().ok();
+                    i += 1;
+                }
+            }
+            "-o" => {
+                if i + 1 < args.len() {
+                    maybe_output_file = Some(args[i + 1].clone());
+                    i += 1;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
 
     // 4048509256541855766
     let xml = r#"
@@ -29,7 +51,7 @@ fn main() {
     </sequence>
     "#;
 
-    let mut mj = parse_xml(xml, seed);
+    let mut mj = parse_xml(xml, maybe_seed);
 
     // let guard = pprof::ProfilerGuard::new(4999).unwrap();
     mj.generate();
@@ -38,7 +60,11 @@ fn main() {
     //     report.flamegraph(file).unwrap();
     // }
 
-    mj.print_grid();
+    if let Some(output_file) = maybe_output_file {
+        let _ = mj.log_grid(output_file);
+    } else {
+        mj.print_grid();
+    }
     println!(" seed: {}", mj.seed);
     println!(" patterns_applied: {}", mj.patterns_applied_counter);
 }
