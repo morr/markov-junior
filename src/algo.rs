@@ -220,10 +220,11 @@ impl MarkovJunior {
         }
 
         for (x, y, pattern_width, pattern_height, is_canonical_key) in changes {
-            let x_range = Self::x_range(x, pattern_width, self.width);
-            let y_range = Self::x_range(y, pattern_height, self.height);
+            let size = std::cmp::max(pattern_width, pattern_height);
+            let x_range = Self::x_range(x, size, self.width);
+            let y_range = Self::x_range(y, size, self.height);
             if is_canonical_key {
-                self.update_canonical_forms(&x_range, &x_range, rule_index);
+                self.update_canonical_forms(&x_range, &y_range, rule_index);
             }
             cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
         }
@@ -257,10 +258,11 @@ impl MarkovJunior {
         for (x, y, pattern, rotation, is_canonical_key) in changes {
             self.apply_pattern(x, y, &pattern, rotation);
 
-            let x_range = Self::x_range(x, pattern.width, self.width);
-            let y_range = Self::x_range(y, pattern.height, self.height);
+            let size = std::cmp::max(pattern.width, pattern.height);
+            let x_range = Self::x_range(x, size, self.width);
+            let y_range = Self::x_range(y, size, self.height);
             if is_canonical_key {
-                self.update_canonical_forms(&x_range, &x_range, rule_index);
+                self.update_canonical_forms(&x_range, &y_range, rule_index);
             }
             cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
         }
