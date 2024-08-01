@@ -34,7 +34,7 @@ fn test_pattern_fits_canonical() {
 
     let pattern_90 = set_pattern(&mut mj, "DA/EB");
     assert_eq!(mj.pattern_fits(0, 0, &pattern_90), Some(4));
-    // assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_90), Some(4));
+    assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern_90), Some(4));
 
     let pattern_180 = set_pattern(&mut mj, "ED/BA");
     assert_eq!(mj.pattern_fits(0, 0, &pattern_180), Some(3));
