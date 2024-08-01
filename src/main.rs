@@ -1,6 +1,9 @@
 use markov_junior::*;
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let seed = args.get(1).and_then(|s| s.parse().ok());
+
     let xml = r#"
     <sequence value="B" width="175" height="175">
       <one in="B" out="W" steps="1"/>
@@ -25,14 +28,16 @@ fn main() {
     </sequence>
     "#;
 
-    let mut markov = parse_xml(xml);
+    let mut mj = parse_xml(xml, seed);
 
     // let guard = pprof::ProfilerGuard::new(4999).unwrap();
-    markov.generate();
+    mj.generate();
     // if let Ok(report) = guard.report().build() {
     //     let file = std::fs::File::create("/tmp/flamesvg").unwrap();
     //     report.flamegraph(file).unwrap();
     // }
 
-    markov.print_grid();
+    mj.print_grid();
+    println!(" seed: {}", mj.seed);
+    println!(" patterns_applied: {}", mj.patterns_applied_counter);
 }

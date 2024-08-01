@@ -16,7 +16,7 @@ fn set_pattern(mj: &mut MarkovJunior, line: &str) -> Pattern {
 
 #[test]
 fn test_pattern_fits_canonical() {
-    let mut mj = MarkovJunior::new_grid("ABCDEFGHI", 3, 3);
+    let mut mj = MarkovJunior::new_grid("ABCDEFGHI", 3, 3, None);
 
     let pattern = set_pattern(&mut mj, "EF/HI");
     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern), None);
@@ -60,7 +60,7 @@ fn test_pattern_fits_canonical() {
 
 #[test]
 fn test_pattern_fits() {
-    let mut mj = MarkovJunior::new_grid("ABCDEFGHI", 3, 3);
+    let mut mj = MarkovJunior::new_grid("ABCDEFGHI", 3, 3, None);
 
     let pattern = set_pattern(&mut mj, "AB");
     assert_eq!(mj.pattern_fits(0, 0, &pattern), Some(1));
@@ -83,7 +83,7 @@ fn test_pattern_fits() {
 
 #[test]
 fn test_apply_canonical_pattern() {
-    let mut mj = MarkovJunior::new('.', 5, 5);
+    let mut mj = MarkovJunior::new('.', 5, 5, None);
     let pattern = Pattern::new("AB/CD");
 
     mj.apply_pattern(1, 1, &pattern, 1);
@@ -187,7 +187,7 @@ fn test_apply_canonical_pattern() {
 fn test_apply_wildcard_square_pattern() {
     let pattern = Pattern::new("A*/C*");
 
-    let mut mj = MarkovJunior::new('.', 5, 5);
+    let mut mj = MarkovJunior::new('.', 5, 5, None);
     mj.apply_pattern(1, 1, &pattern, 1);
     assert_eq!(
         mj.grid,
@@ -200,7 +200,7 @@ fn test_apply_wildcard_square_pattern() {
         ]
     );
 
-    let mut mj = MarkovJunior::new('.', 5, 5);
+    let mut mj = MarkovJunior::new('.', 5, 5, None);
     mj.apply_pattern(1, 1, &pattern, 2);
     assert_eq!(
         mj.grid,
@@ -213,7 +213,7 @@ fn test_apply_wildcard_square_pattern() {
         ]
     );
 
-    let mut mj = MarkovJunior::new('.', 5, 5);
+    let mut mj = MarkovJunior::new('.', 5, 5, None);
     mj.apply_pattern(1, 1, &pattern, 3);
     assert_eq!(
         mj.grid,
@@ -226,7 +226,7 @@ fn test_apply_wildcard_square_pattern() {
         ]
     );
 
-    let mut mj = MarkovJunior::new('.', 5, 5);
+    let mut mj = MarkovJunior::new('.', 5, 5, None);
     mj.apply_pattern(1, 1, &pattern, 4);
     assert_eq!(
         mj.grid,
@@ -244,7 +244,7 @@ fn test_apply_wildcard_square_pattern() {
 fn test_apply_horizontal_pattern() {
     let pattern = Pattern::new("AB");
 
-    let mut mj = MarkovJunior::new('.', 4, 4);
+    let mut mj = MarkovJunior::new('.', 4, 4, None);
     mj.apply_pattern(1, 1, &pattern, 1);
     assert_eq!(
         mj.grid,
@@ -256,7 +256,7 @@ fn test_apply_horizontal_pattern() {
         ]
     );
 
-    let mut mj = MarkovJunior::new('.', 4, 4);
+    let mut mj = MarkovJunior::new('.', 4, 4, None);
     mj.apply_pattern(1, 1, &pattern, 2);
     assert_eq!(
         mj.grid,
@@ -268,7 +268,7 @@ fn test_apply_horizontal_pattern() {
         ]
     );
 
-    let mut mj = MarkovJunior::new('.', 4, 4);
+    let mut mj = MarkovJunior::new('.', 4, 4, None);
     mj.apply_pattern(1, 1, &pattern, 3);
     assert_eq!(
         mj.grid,
@@ -280,7 +280,7 @@ fn test_apply_horizontal_pattern() {
         ]
     );
 
-    let mut mj = MarkovJunior::new('.', 4, 4);
+    let mut mj = MarkovJunior::new('.', 4, 4, None);
     mj.apply_pattern(1, 1, &pattern, 4);
     assert_eq!(
         mj.grid,
@@ -297,7 +297,7 @@ fn test_apply_horizontal_pattern() {
 fn test_apply_vertical_pattern() {
     let pattern = Pattern::new("A/B");
 
-    let mut mj = MarkovJunior::new('.', 4, 4);
+    let mut mj = MarkovJunior::new('.', 4, 4, None);
     mj.apply_pattern(1, 1, &pattern, 1);
     assert_eq!(
         mj.grid,
@@ -309,7 +309,7 @@ fn test_apply_vertical_pattern() {
         ]
     );
 
-    let mut mj = MarkovJunior::new('.', 4, 4);
+    let mut mj = MarkovJunior::new('.', 4, 4, None);
     mj.apply_pattern(1, 1, &pattern, 2);
     assert_eq!(
         mj.grid,
@@ -321,7 +321,7 @@ fn test_apply_vertical_pattern() {
         ]
     );
 
-    let mut mj = MarkovJunior::new('.', 4, 4);
+    let mut mj = MarkovJunior::new('.', 4, 4, None);
     mj.apply_pattern(1, 1, &pattern, 3);
     assert_eq!(
         mj.grid,
@@ -333,7 +333,7 @@ fn test_apply_vertical_pattern() {
         ]
     );
 
-    let mut mj = MarkovJunior::new('.', 4, 4);
+    let mut mj = MarkovJunior::new('.', 4, 4, None);
     mj.apply_pattern(1, 1, &pattern, 4);
     assert_eq!(
         mj.grid,
@@ -348,7 +348,7 @@ fn test_apply_vertical_pattern() {
 
 #[test]
 fn test_apply_pattern_at_edge() {
-    let mut mj = MarkovJunior::new('.', 5, 5);
+    let mut mj = MarkovJunior::new('.', 5, 5, None);
     let pattern = Pattern::new("AB/CD");
 
     mj.apply_pattern(3, 3, &pattern, 1);
@@ -367,7 +367,7 @@ fn test_apply_pattern_at_edge() {
 
 #[test]
 fn test_generate() {
-    let mut mj = MarkovJunior::new('.', 3, 3);
+    let mut mj = MarkovJunior::new('.', 3, 3, None);
     mj.grid = #[rustfmt::skip] vec![
         b'B', b'W', b'G',
         b'B', b'W', b'G',
@@ -394,7 +394,7 @@ fn test_generate() {
 
 #[test]
 fn test_generate_2() {
-    let mut mj = MarkovJunior::new('.', 3, 3);
+    let mut mj = MarkovJunior::new('.', 3, 3, None);
     mj.grid = #[rustfmt::skip] vec![
         b'B', b'W', b'G',
         b'B', b'W', b'G',
@@ -422,7 +422,7 @@ fn test_generate_2() {
 
 #[test]
 fn test_generate_3() {
-    let mut mj = MarkovJunior::new('.', 3, 3);
+    let mut mj = MarkovJunior::new('.', 3, 3, None);
     mj.grid = #[rustfmt::skip] vec![
         b'B', b'W', b'G',
         b'B', b'W', b'G',
@@ -451,7 +451,7 @@ fn test_generate_3() {
 
 #[test]
 fn test_generate_4() {
-    let mut mj = MarkovJunior::new('.', 3, 3);
+    let mut mj = MarkovJunior::new('.', 3, 3, None);
     mj.grid = #[rustfmt::skip] vec![
         b'B', b'B', b'B',
         b'W', b'W', b'W',
@@ -480,7 +480,7 @@ fn test_generate_4() {
 
 #[test]
 fn test_generate_5() {
-    let mut mj = MarkovJunior::new('.', 3, 3);
+    let mut mj = MarkovJunior::new('.', 3, 3, None);
     mj.grid = #[rustfmt::skip] vec![
         b'B', b'B', b'B',
         b'W', b'W', b'W',
@@ -507,7 +507,7 @@ fn test_generate_5() {
 
 #[test]
 fn test_generate_6() {
-    let mut mj = MarkovJunior::new('.', 3, 3);
+    let mut mj = MarkovJunior::new('.', 3, 3, None);
     mj.grid = #[rustfmt::skip] vec![
         b'B', b'B', b'B',
         b'B', b'B', b'B',

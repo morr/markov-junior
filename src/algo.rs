@@ -1,5 +1,6 @@
 use crate::*;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
+use rand_chacha::ChaCha8Rng;
 use std::{collections::HashMap, ops::Range};
 
 // #[cfg(feature = "parallel")]
@@ -11,26 +12,39 @@ pub struct MarkovJunior {
     pub height: usize,
     pub rules: Vec<Rule>,
     pub canonical_forms: HashMap<(usize, usize), Vec<RotatedSeq>>,
+    pub patterns_applied_counter: usize,
+    pub rng: ChaCha8Rng,
+    pub seed: u64,
 }
 
 impl MarkovJunior {
-    pub fn new(default: char, width: usize, height: usize) -> Self {
+    pub fn new(default: char, width: usize, height: usize, seed: Option<u64>) -> Self {
+        let seed = seed.unwrap_or_else(|| rand::thread_rng().gen());
+
         MarkovJunior {
             grid: vec![default as u8; width * height],
             width,
             height,
             rules: Vec::new(),
             canonical_forms: HashMap::new(),
+            patterns_applied_counter: 0,
+            rng: ChaCha8Rng::seed_from_u64(seed),
+            seed,
         }
     }
 
-    pub fn new_grid(data: &str, width: usize, height: usize) -> Self {
+    pub fn new_grid(data: &str, width: usize, height: usize, seed: Option<u64>) -> Self {
+        let seed = seed.unwrap_or_else(|| rand::thread_rng().gen());
+
         MarkovJunior {
             grid: data.chars().map(|c| c as u8).collect(),
             width,
             height,
             rules: Vec::new(),
             canonical_forms: HashMap::new(),
+            patterns_applied_counter: 0,
+            rng: ChaCha8Rng::seed_from_u64(seed),
+            seed,
         }
     }
 
@@ -39,19 +53,18 @@ impl MarkovJunior {
     }
 
     pub fn generate(&mut self) {
-        let mut rng = rand::thread_rng();
-
         for rule_index in 0..self.rules.len() {
             let rule = &self.rules[rule_index];
             let steps = rule.steps.unwrap_or(self.width * self.height * 16);
             let kind = rule.kind;
 
+            let current_patterns_applied_counter = self.patterns_applied_counter;
             self.precompute_canonical_forms(rule_index);
             let mut cache = self.compute_cache(rule_index, &(0..self.width), &(0..self.height));
 
             for _step in 0..steps {
                 let any_change = match kind {
-                    RuleKind::One => self.apply_one_rule(&mut rng, rule_index, &mut cache),
+                    RuleKind::One => self.apply_one_rule(rule_index, &mut cache),
                     RuleKind::All => self.apply_all_rule(rule_index, &mut cache),
                     RuleKind::Parallel => self.apply_parallel_rule(rule_index, &mut cache),
                 };
@@ -60,7 +73,7 @@ impl MarkovJunior {
                     break;
                 }
             }
-            // println!("\nrule_index: {rule_index}\n");
+            println!(" rule: {rule_index} patterns_applied: {}", self.patterns_applied_counter - current_patterns_applied_counter);
             // self.print_grid();
         }
     }
@@ -121,7 +134,6 @@ impl MarkovJunior {
 
     fn apply_one_rule(
         &mut self,
-        rng: &mut impl Rng,
         rule_index: usize,
         cache: &mut HashMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
@@ -135,7 +147,7 @@ impl MarkovJunior {
             return false;
         }
 
-        let mut choice = rng.gen::<f32>() * total_weight;
+        let mut choice = self.rng.gen::<f32>() * total_weight;
         let mut selected_change = None;
 
         for pattern_match in Self::cache_iter(cache) {
@@ -252,6 +264,8 @@ impl MarkovJunior {
     }
 
     pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
+        self.patterns_applied_counter += 1;
+
         let rotated_seq = pattern
             .rotations
             .iter()
