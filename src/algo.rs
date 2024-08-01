@@ -99,91 +99,12 @@ impl MarkovJunior {
         let pattern_canonical_form = &pattern.canonical_form.as_ref().unwrap();
 
         if grid_canonical_form.data == pattern_canonical_form.data {
-            Some(Self::calculate_relative_rotation(
+            Some(Pattern::calculate_relative_rotation(
                 grid_canonical_form.rotation,
                 pattern_canonical_form.rotation,
             ))
-            // Some(grid_canonical_form.rotation)
         } else {
             None
-        }
-    }
-
-    fn calculate_relative_rotation(grid_rotation: isize, pattern_rotation: isize) -> isize {
-        match (grid_rotation, pattern_rotation) {
-            (1, 1) => 1,
-            (1, 2) => 2,
-            (1, 3) => 3,
-            (1, 4) => 4,
-            (1, -1) => -1,
-            (1, -2) => -2,
-            (1, -3) => -3,
-            (1, -4) => -4,
-
-            (2, 1) => -3,
-            (2, 2) => 1,
-            (2, 3) => 2,
-            (2, 4) => 3,
-            (2, -1) => -4,
-            (2, -2) => -1,
-            (2, -3) => -2,
-            (2, -4) => -3,
-
-            (3, 1) => -2,
-            (3, 2) => -3,
-            (3, 3) => 1,
-            (3, 4) => 2,
-            (3, -1) => -1,
-            (3, -2) => -2,
-            (3, -3) => -3,
-            (3, -4) => -4,
-
-            (4, 1) => -1,
-            (4, 2) => -2,
-            (4, 3) => -3,
-            (4, 4) => 1,
-            (4, -1) => -2,
-            (4, -2) => -3,
-            (4, -3) => -4,
-            (4, -4) => -1,
-
-            (-1, 1) => 1,
-            (-1, 2) => 2,
-            (-1, 3) => 3,
-            (-1, 4) => 4,
-            (-1, -1) => 1,
-            (-1, -2) => 2,
-            (-1, -3) => 3,
-            (-1, -4) => 4,
-
-            (-2, 1) => -3,
-            (-2, 2) => 1,
-            (-2, 3) => 2,
-            (-2, 4) => 3,
-            (-2, -1) => -3,
-            (-2, -2) => 1,
-            (-2, -3) => 2,
-            (-2, -4) => 3,
-
-            (-3, 1) => -2,
-            (-3, 2) => -3,
-            (-3, 3) => 1,
-            (-3, 4) => 2,
-            (-3, -1) => -2,
-            (-3, -2) => -3,
-            (-3, -3) => 1,
-            (-3, -4) => 2,
-
-            (-4, 1) => -1,
-            (-4, 2) => -2,
-            (-4, 3) => -3,
-            (-4, 4) => 1,
-            (-4, -1) => -1,
-            (-4, -2) => -2,
-            (-4, -3) => -3,
-            (-4, -4) => 1,
-
-            _ => unreachable!(),
         }
     }
 

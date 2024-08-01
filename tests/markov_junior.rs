@@ -95,27 +95,59 @@ fn test_pattern_mirror_270_fits_canonical() {
 
 #[test]
 fn test_pattern_fits_canonical_2() {
-    let mut mj = MarkovJunior::new_grid("UBBU", 2, 2, None);
-    let pattern = set_pattern(&mut mj, "BU/UB");
-    assert_eq!(mj.pattern_fits(0, 0, &pattern), Some(2));
-    assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern), Some(2));
+    let line = "AB/CD";
+    let original_pattern = Pattern::new(line);
+
+    for RotatedSeq { data, .. } in original_pattern.rotations.iter() {
+        let pattern_line: String = vec![data[0], data[1], '/', data[2], data[3]]
+            .into_iter()
+            .collect();
+
+        let mut mj = MarkovJunior::new_grid("ABCD", 2, 2, None);
+        let pattern = set_pattern(&mut mj, &pattern_line);
+
+        assert_ne!(mj.pattern_fits(0, 0, &pattern), None);
+        assert_eq!(
+            mj.pattern_fits(0, 0, &pattern),
+            mj.pattern_fits_canonical(0, 0, &pattern)
+        );
+
+        let grid_data: String = data.iter().collect();
+
+        let mut mj = MarkovJunior::new_grid(&grid_data, 2, 2, None);
+        let pattern = set_pattern(&mut mj, line);
+
+        assert_ne!(mj.pattern_fits(0, 0, &pattern), None);
+        assert_eq!(
+            mj.pattern_fits(0, 0, &pattern),
+            mj.pattern_fits_canonical(0, 0, &pattern)
+        );
+
+        for RotatedSeq { data: data2, .. } in original_pattern.rotations.iter() {
+            let grid_data2: String = data2.iter().collect();
+
+            let mut mj = MarkovJunior::new_grid(&grid_data2, 2, 2, None);
+            let pattern = set_pattern(&mut mj, &pattern_line);
+
+            assert_ne!(mj.pattern_fits(0, 0, &pattern), None);
+            assert_eq!(
+                mj.pattern_fits(0, 0, &pattern),
+                mj.pattern_fits_canonical(0, 0, &pattern)
+            );
+
+        }
+
+    }
 }
 
-#[test]
-fn test_pattern_90_fits_canonical_2() {
-    let mut mj = MarkovJunior::new_grid("UBBU", 2, 2, None);
-    let pattern = set_pattern(&mut mj, "UB/BU");
-    assert_eq!(mj.pattern_fits(0, 0, &pattern), Some(1));
-    assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern), Some(1));
-}
+// #[test]
+// fn test_pattern_fits_canonical_4() {
+//     let mut mj = MarkovJunior::new_grid("UBBU", 2, 2, None);
+//     let pattern = set_pattern(&mut mj, "BU/UB");
+//     assert_eq!(mj.pattern_fits(0, 0, &pattern), Some(2));
+//     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern), Some(2));
+// }
 
-#[test]
-fn test_pattern_180_fits_canonical_2() {
-    let mut mj = MarkovJunior::new_grid("UBBU", 2, 2, None);
-    let pattern = set_pattern(&mut mj, "BU/UB");
-    assert_eq!(mj.pattern_fits(0, 0, &pattern), Some(2));
-    assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern), Some(2));
-}
 
 #[test]
 fn test_pattern_fits() {
@@ -592,32 +624,32 @@ fn test_generate_6() {
     );
 }
 
-// #[test]
-// fn test_generate_7() {
-//     let mut mj = MarkovJunior::new('.', 2, 2, None);
-//     mj.grid = #[rustfmt::skip] vec![
-//         b'U', b'B',
-//         b'B', b'U',
-//     ];
-//
-//     mj.add_rule(Rule {
-//         patterns: vec![PatternRule::new(
-//             Pattern::new("BU/UB"),
-//             Pattern::new("U*/**"),
-//         )],
-//         kind: RuleKind::One,
-//         steps: None,
-//     });
-//     mj.generate();
-//     // mj.print_grid();
-//
-//     // Check the result
-//     assert_eq!(mj.patterns_applied_counter, 1);
-//     assert_eq!(
-//         mj.grid,
-//         #[rustfmt::skip] vec![
-//             b'U', b'U',
-//             b'B', b'U',
-//         ]
-//     );
-// }
+#[test]
+fn test_generate_7() {
+    let mut mj = MarkovJunior::new('.', 2, 2, None);
+    mj.grid = #[rustfmt::skip] vec![
+        b'U', b'B',
+        b'B', b'U',
+    ];
+
+    mj.add_rule(Rule {
+        patterns: vec![PatternRule::new(
+            Pattern::new("BU/UB"),
+            Pattern::new("U*/**"),
+        )],
+        kind: RuleKind::One,
+        steps: None,
+    });
+    mj.generate();
+    // mj.print_grid();
+
+    // Check the result
+    assert_eq!(mj.patterns_applied_counter, 1);
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip] vec![
+            b'U', b'B',
+            b'U', b'U',
+        ]
+    );
+}
