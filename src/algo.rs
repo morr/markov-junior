@@ -154,6 +154,7 @@ impl MarkovJunior {
         let mut selected_change = None;
 
         for pattern_match in valid_patterns {
+            // println!("{:?}", pattern_match);
             choice -= pattern_match.weight;
 
             if choice <= 0.0 {
