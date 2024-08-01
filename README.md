@@ -1,6 +1,7 @@
 ## how to run
 ```sh
-cargo build --release && time cargo run --release -- -o output.txt && cat output.txt | pattern-to-png 1x | imgcat --width=50 --height 25
+cargo build --release && time cargo run --release -- --output output.txt && cat output.txt | pattern-to-png 1x | imgcat --width=50
+cargo build --release && time cargo run --release -- --output output.txt --seed 14440708802582084752 && cat output.txt | pattern-to-png 1x | imgcat --width=50
 ```
 
 ## profile

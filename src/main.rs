@@ -9,13 +9,13 @@ fn main() {
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
-            "-s" => {
+            "--seed" => {
                 if i + 1 < args.len() {
                     maybe_seed = args[i + 1].parse().ok();
                     i += 1;
                 }
             }
-            "-o" => {
+            "--output" => {
                 if i + 1 < args.len() {
                     maybe_output_file = Some(args[i + 1].clone());
                     i += 1;
