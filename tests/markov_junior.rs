@@ -533,33 +533,33 @@ fn test_generate_6() {
     );
 }
 
-// #[test]
-// fn test_generate_7() {
-//     let mut mj = MarkovJunior::new('.', 4, 4, None);
-//     mj.grid = #[rustfmt::skip] vec![
-//         b'B', b'B', b'B', b'B',
-//         b'B', b'B', b'U', b'B',
-//         b'B', b'U', b'B', b'B',
-//         b'B', b'B', b'B', b'B'
-//     ];
-//
-//     mj.add_rule(Rule {
-//         patterns: vec![PatternRule::new(Pattern::new("BU/UB"), Pattern::new("U*/**"))],
-//         kind: RuleKind::All,
-//         steps: None,
-//     });
-//     mj.generate();
-//
-//     mj.print_grid();
-//     // Check the result
-//     assert_eq!(
-//         mj.grid,
-//         #[rustfmt::skip] vec![
-//             b'B', b'B', b'B', b'B',
-//             b'B', b'U', b'U', b'B',
-//             b'B', b'U', b'B', b'B',
-//             b'B', b'B', b'B', b'B'
-//         ]
-//     );
-//     assert_eq!(mj.patterns_applied_counter, 1);
-// }
+#[test]
+fn test_generate_7() {
+    let mut mj = MarkovJunior::new('.', 4, 4, None);
+    mj.grid = #[rustfmt::skip] vec![
+        b'B', b'B', b'B', b'B',
+        b'B', b'U', b'B', b'B',
+        b'B', b'B', b'U', b'B',
+        b'B', b'B', b'B', b'B'
+    ];
+
+    mj.add_rule(Rule {
+        patterns: vec![PatternRule::new(Pattern::new("BU/UB"), Pattern::new("U*/**"))],
+        kind: RuleKind::All,
+        steps: None,
+    });
+    mj.generate();
+    // mj.print_grid();
+
+    // Check the result
+    assert_eq!(mj.patterns_applied_counter, 1);
+    assert_eq!(
+        mj.grid,
+        #[rustfmt::skip] vec![
+            b'B', b'B', b'B', b'B',
+            b'B', b'U', b'U', b'B',
+            b'B', b'B', b'U', b'B',
+            b'B', b'B', b'B', b'B'
+        ]
+    );
+}

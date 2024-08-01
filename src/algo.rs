@@ -271,14 +271,16 @@ impl MarkovJunior {
             }
             if is_canonical_key {
                 self.update_canonical_forms(&x_range, &y_range, rule_index);
-                println!(
-                    "canonical_form after: {:?}",
-                    self.canonical_forms
-                        .get(&maybe_canonical_key.unwrap())
-                        .unwrap()
-                        .get(y * self.width + x)
-                        .unwrap()
-                );
+                if rule_index == 6 {
+                    println!(
+                        "canonical_form after: {:?}",
+                        self.canonical_forms
+                            .get(&maybe_canonical_key.unwrap())
+                            .unwrap()
+                            .get(y * self.width + x)
+                            .unwrap()
+                    );
+                }
             }
             if rule_index == 6 {
                 println!(
