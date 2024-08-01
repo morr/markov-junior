@@ -4,8 +4,9 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let seed = args.get(1).and_then(|s| s.parse().ok());
 
+    // 4048509256541855766
     let xml = r#"
-    <sequence value="B" width="175" height="175">
+    <sequence value="B" width="125" height="125">
       <one in="B" out="W" steps="1"/>
       <one in="B" out="R" steps="1"/>
       <one>
