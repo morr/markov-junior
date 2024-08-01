@@ -59,7 +59,7 @@ pub struct Pattern {
     pub rotations: Vec<RotatedSeq>,
     pub unique_rotations: Vec<RotatedSeq>,
     pub canonical_form: Option<RotatedSeq>,
-    pub has_wildcards: bool
+    pub has_wildcards: bool,
 }
 
 impl Pattern {
@@ -80,7 +80,7 @@ impl Pattern {
             rotations,
             unique_rotations,
             canonical_form: maybe_canonical_form,
-            has_wildcards
+            has_wildcards,
         }
     }
 
@@ -88,7 +88,7 @@ impl Pattern {
         data: &[char],
         width: usize,
         height: usize,
-        has_wildcards: bool
+        has_wildcards: bool,
     ) -> (Option<RotatedSeq>, Vec<RotatedSeq>, Vec<RotatedSeq>) {
         if width == 1 && height == 1 {
             let rotation = RotatedSeq {
@@ -173,7 +173,11 @@ impl Pattern {
                         .collect::<String>()
                         .cmp(&b.data.iter().collect::<String>());
                     if data_cmp == Ordering::Equal {
-                        a.rotation.abs().cmp(&b.rotation.abs())
+                        match (a.rotation >= 0, b.rotation >= 0) {
+                            (true, false) => Ordering::Less,
+                            (false, true) => Ordering::Greater,
+                            _ => a.rotation.abs().cmp(&b.rotation.abs()),
+                        }
                     } else {
                         data_cmp
                     }

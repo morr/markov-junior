@@ -99,7 +99,7 @@ impl MarkovJunior {
         let pattern_canonical_form = &pattern.canonical_form.as_ref().unwrap();
 
         if grid_canonical_form.data == pattern_canonical_form.data {
-            Some(pattern_canonical_form.rotation)
+            Some(grid_canonical_form.rotation)
         } else {
             None
         }
@@ -199,46 +199,17 @@ impl MarkovJunior {
         let mut applied = false;
         let mut changes = Vec::new();
 
-        if rule_index == 6 {
-            println!("found valid_patterns: {}", valid_patterns.len());
-        }
-
         for pattern_match in valid_patterns {
             let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
             let pattern = pattern_rule.output.clone();
             let is_canonical_key = pattern_rule.canonical_key.is_some();
-            let maybe_canonical_key = pattern_rule.canonical_key;
 
-            if rule_index == 6 {
-                println!("pattern_match: {:?}", pattern_match);
-                println!("pattern: {:?}", pattern);
-                println!(
-                    "before {}/{}: {}{}/{}{}",
-                    pattern_match.x,
-                    pattern_match.y,
-                    self.grid[pattern_match.y * self.width + pattern_match.x] as char,
-                    self.grid[pattern_match.y * self.width + pattern_match.x + 1] as char,
-                    self.grid[(pattern_match.y + 1) * self.width + pattern_match.x] as char,
-                    self.grid[(pattern_match.y + 1) * self.width + pattern_match.x + 1] as char
-                );
-            }
             self.apply_pattern(
                 pattern_match.x,
                 pattern_match.y,
                 &pattern,
                 pattern_match.rotation,
             );
-            if rule_index == 6 {
-                println!(
-                    "after {}/{}: {}{}/{}{}",
-                    pattern_match.x,
-                    pattern_match.y,
-                    self.grid[pattern_match.y * self.width + pattern_match.x] as char,
-                    self.grid[pattern_match.y * self.width + pattern_match.x + 1] as char,
-                    self.grid[(pattern_match.y + 1) * self.width + pattern_match.x] as char,
-                    self.grid[(pattern_match.y + 1) * self.width + pattern_match.x + 1] as char
-                );
-            }
 
             changes.push((
                 pattern_match.x,
@@ -246,57 +217,18 @@ impl MarkovJunior {
                 pattern.width,
                 pattern.height,
                 is_canonical_key,
-                maybe_canonical_key,
             ));
             applied = true;
         }
 
-        for (x, y, pattern_width, pattern_height, is_canonical_key, maybe_canonical_key) in changes
-        {
-            if rule_index == 6 {
-                println!("{x}/{y} size:{pattern_width}/{pattern_height} is_canonical_key:{is_canonical_key}");
-                println!("{x}/{y}: {}", self.grid[y * self.width + x] as char);
-            }
+        for (x, y, pattern_width, pattern_height, is_canonical_key) in changes {
             let size = std::cmp::max(pattern_width, pattern_height);
             let x_range = Self::x_range(x, size, self.width);
             let y_range = Self::x_range(y, size, self.height);
-            if rule_index == 6 {
-                println!(
-                    "canonical_form before: {:?}",
-                    self.canonical_forms
-                        .get(&maybe_canonical_key.unwrap())
-                        .unwrap()
-                        .get(y * self.width + x)
-                        .unwrap()
-                );
-            }
             if is_canonical_key {
                 self.update_canonical_forms(&x_range, &y_range, rule_index);
-                if rule_index == 6 {
-                    println!(
-                        "canonical_form after: {:?}",
-                        self.canonical_forms
-                            .get(&maybe_canonical_key.unwrap())
-                            .unwrap()
-                            .get(y * self.width + x)
-                            .unwrap()
-                    );
-                }
-            }
-            if rule_index == 6 {
-                println!(
-                    "cache update: {:?}",
-                    self.compute_cache(rule_index, &x_range, &y_range)
-                );
             }
             cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
-            if rule_index == 6 {
-                println!(
-                    "result valid_patterns: {}",
-                    Self::cached_patterns(cache).len()
-                );
-                panic!("end");
-            }
         }
 
         applied
