@@ -1,10 +1,13 @@
 use markov_junior::*;
 use std::env;
 
+const DEFAULT_SIZE: usize = 100;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut maybe_seed = None;
     let mut maybe_output_file = None;
+    let mut size = DEFAULT_SIZE;
 
     let mut i = 1;
     while i < args.len() {
@@ -21,14 +24,28 @@ fn main() {
                     i += 1;
                 }
             }
+            "--size" => {
+                if i + 1 < args.len() {
+                    size = match args[i + 1].parse::<usize>() {
+                        Ok(parsed_size) => parsed_size,
+                        Err(_) => {
+                            eprintln!(
+                                "Error: Invalid size value. Using default size {}",
+                                DEFAULT_SIZE
+                            );
+                            DEFAULT_SIZE
+                        }
+                    };
+                    i += 1;
+                }
+            }
             _ => {}
         }
         i += 1;
     }
 
-    // 4048509256541855766
-    let xml = r#"
-    <sequence value="B" width="175" height="175">
+    let xml = format!(
+        r#"<sequence value="B" width="{size}" height="{size}">
       <one in="B" out="W" steps="1"/>
       <one in="B" out="R" steps="1"/>
       <one>
@@ -48,10 +65,9 @@ fn main() {
         <rule in="EB" out="*E"/>
         <rule in="GB" out="*G"/>
       </one>
-    </sequence>
-    "#;
-
-    let mut mj = parse_xml(xml, maybe_seed);
+    </sequence>"#
+    );
+    let mut mj = parse_xml(&xml, maybe_seed);
 
     // let guard = pprof::ProfilerGuard::new(4999).unwrap();
     mj.generate();
