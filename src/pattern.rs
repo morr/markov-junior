@@ -53,6 +53,7 @@ pub const NOTHING: char = '❌';
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Pattern {
+    pub line: String,
     pub data: Vec<char>,
     pub width: usize,
     pub height: usize,
@@ -74,6 +75,7 @@ impl Pattern {
             Self::compute_canonical_form_and_rotations(&data, width, height, has_wildcards);
 
         Pattern {
+            line: line.to_string(),
             data,
             width,
             height,
