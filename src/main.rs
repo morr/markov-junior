@@ -72,6 +72,13 @@ fn main() {
     for rule_index in 0..mj.rules.len() {
         if let Some(ref output_file) = maybe_output_file {
             mj.log_grid(output_file.clone());
+            std::process::Command::new("sh")
+                .arg("-c")
+                .arg("cat output.txt | pattern-to-png 1x | imgcat --width=50")
+                .stdout(std::process::Stdio::inherit())
+                .stderr(std::process::Stdio::inherit())
+                .status()
+                .expect("Failed to execute shell command");
         }
         mj.generate(rule_index);
     }
