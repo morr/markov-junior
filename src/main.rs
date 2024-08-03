@@ -69,18 +69,19 @@ fn main() {
     );
     let mut mj = parse_xml(&xml, maybe_seed);
 
-    // let guard = pprof::ProfilerGuard::new(4999).unwrap();
-    mj.generate();
-    // if let Ok(report) = guard.report().build() {
-    //     let file = std::fs::File::create("/tmp/flamesvg").unwrap();
-    //     report.flamegraph(file).unwrap();
-    // }
+    for rule_index in 0..mj.rules.len() {
+        if let Some(ref output_file) = maybe_output_file {
+            mj.log_grid(output_file.clone());
+        }
+        mj.generate(rule_index);
+    }
 
     if let Some(output_file) = maybe_output_file {
-        let _ = mj.log_grid(output_file);
+        mj.log_grid(output_file);
     } else {
         mj.print_grid();
     }
+
     println!("seed: {}", mj.seed);
     println!("patterns_applied: {}", mj.patterns_applied_counter);
 }

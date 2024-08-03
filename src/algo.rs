@@ -52,33 +52,37 @@ impl MarkovJunior {
         self.rules.push(rule);
     }
 
-    pub fn generate(&mut self) {
+    pub fn generate_all(&mut self) {
         for rule_index in 0..self.rules.len() {
-            let rule = &self.rules[rule_index];
-            let steps = rule.steps.unwrap_or(self.width * self.height * 16);
-            let kind = rule.kind;
-
-            let current_patterns_applied_counter = self.patterns_applied_counter;
-            self.precompute_canonical_forms(rule_index);
-            let mut cache = self.compute_cache(rule_index, &(0..self.width), &(0..self.height));
-
-            for _step in 0..steps {
-                let any_change = match kind {
-                    RuleKind::One => self.apply_one_rule(rule_index, &mut cache),
-                    RuleKind::All => self.apply_all_rule(rule_index, &mut cache),
-                    RuleKind::Parallel => self.apply_parallel_rule(rule_index, &mut cache),
-                };
-
-                if !any_change {
-                    break;
-                }
-            }
-            println!(
-                "rule: {rule_index} patterns_applied: {}",
-                self.patterns_applied_counter - current_patterns_applied_counter
-            );
-            // self.print_grid();
+            self.generate(rule_index);
         }
+    }
+
+    pub fn generate(&mut self, rule_index: usize) {
+        let rule = &self.rules[rule_index];
+        let steps = rule.steps.unwrap_or(self.width * self.height * 16);
+        let kind = rule.kind;
+
+        let current_patterns_applied_counter = self.patterns_applied_counter;
+        self.precompute_canonical_forms(rule_index);
+        let mut cache = self.compute_cache(rule_index, &(0..self.width), &(0..self.height));
+
+        for _step in 0..steps {
+            let any_change = match kind {
+                RuleKind::One => self.apply_one_rule(rule_index, &mut cache),
+                RuleKind::All => self.apply_all_rule(rule_index, &mut cache),
+                RuleKind::Parallel => self.apply_parallel_rule(rule_index, &mut cache),
+            };
+
+            if !any_change {
+                break;
+            }
+        }
+        println!(
+            "rule: {rule_index} patterns_applied: {}",
+            self.patterns_applied_counter - current_patterns_applied_counter
+        );
+        // self.print_grid();
     }
 
     pub fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<isize> {
@@ -405,21 +409,21 @@ impl MarkovJunior {
         }
     }
 
-    pub fn log_grid(&self, filename: String) -> std::io::Result<()> {
+    pub fn log_grid(&self, filename: String) {
         let mut file = OpenOptions::new()
             .write(true)
             .truncate(true)
             .create(true)
-            .open(filename)?;
+            .open(filename)
+            .expect("Failed to open file");
 
         for y in 0..self.height {
             for x in 0..self.width {
-                write!(file, "{}", self.grid[y * self.width + x] as char)?;
+                write!(file, "{}", self.grid[y * self.width + x] as char)
+                    .expect("Failed to write to file");
             }
-            writeln!(file)?;
+            writeln!(file).expect("Failed to write to file");
         }
-
-        Ok(())
     }
 
     fn cached_patterns(cache: &BTreeMap<(usize, usize), Vec<PatternMatch>>) -> Vec<&PatternMatch> {

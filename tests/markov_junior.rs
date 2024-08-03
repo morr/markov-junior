@@ -470,7 +470,7 @@ fn test_generate() {
         steps: None,
     });
     // mj.print_grid();
-    mj.generate();
+    mj.generate_all();
     mj.print_grid();
 
     assert_eq!(
@@ -498,7 +498,7 @@ fn test_generate_2() {
         steps: None,
     });
     mj.print_grid();
-    mj.generate();
+    mj.generate_all();
     mj.print_grid();
 
     assert_eq!(
@@ -529,7 +529,7 @@ fn test_generate_3() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.generate();
+    mj.generate_all();
     assert_eq!(
         mj.grid,
         #[rustfmt::skip] vec![
@@ -558,7 +558,7 @@ fn test_generate_4() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.generate();
+    mj.generate_all();
     assert_eq!(
         mj.grid,
         #[rustfmt::skip] vec![
@@ -583,7 +583,7 @@ fn test_generate_5() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.generate();
+    mj.generate_all();
 
     // Check the result
     assert_eq!(
@@ -610,7 +610,7 @@ fn test_generate_6() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.generate();
+    mj.generate_all();
 
     mj.print_grid();
     // Check the result
@@ -640,7 +640,7 @@ fn test_generate_7() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.generate();
+    mj.generate_all();
     // mj.print_grid();
 
     // Check the result
