@@ -644,7 +644,7 @@ fn test_generate_7() {
     // mj.print_grid();
 
     // Check the result
-    assert_eq!(mj.patterns_applied_counter, 1);
+    assert_eq!(mj.changes, 1);
     assert_eq!(
         mj.grid,
         #[rustfmt::skip] vec![

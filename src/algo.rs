@@ -12,7 +12,7 @@ pub struct MarkovJunior {
     pub height: usize,
     pub rules: Vec<Rule>,
     pub canonical_forms: BTreeMap<(usize, usize), Vec<RotatedSeq>>,
-    pub patterns_applied_counter: usize,
+    pub changes: usize,
     pub rng: ChaCha8Rng,
     pub seed: u64,
 }
@@ -27,7 +27,7 @@ impl MarkovJunior {
             height,
             rules: Vec::new(),
             canonical_forms: BTreeMap::new(),
-            patterns_applied_counter: 0,
+            changes: 0,
             rng: ChaCha8Rng::seed_from_u64(seed),
             seed,
         }
@@ -42,7 +42,7 @@ impl MarkovJunior {
             height,
             rules: Vec::new(),
             canonical_forms: BTreeMap::new(),
-            patterns_applied_counter: 0,
+            changes: 0,
             rng: ChaCha8Rng::seed_from_u64(seed),
             seed,
         }
@@ -63,7 +63,7 @@ impl MarkovJunior {
         let steps = rule.steps.unwrap_or(self.width * self.height * 16);
         let kind = rule.kind;
 
-        let current_patterns_applied_counter = self.patterns_applied_counter;
+        let prev_changes = self.changes;
         self.precompute_canonical_forms(rule_index);
         let mut cache = self.compute_cache(rule_index, &(0..self.width), &(0..self.height));
 
@@ -79,8 +79,8 @@ impl MarkovJunior {
             }
         }
         println!(
-            "rule: {rule_index} patterns_applied: {}",
-            self.patterns_applied_counter - current_patterns_applied_counter
+            "rule: {rule_index} changes: {}",
+            self.changes - prev_changes
         );
         // self.print_grid();
     }
@@ -280,7 +280,7 @@ impl MarkovJunior {
     }
 
     pub fn apply_pattern(&mut self, x: usize, y: usize, pattern: &Pattern, rotation: isize) {
-        self.patterns_applied_counter += 1;
+        self.changes += 1;
 
         let rotated_seq = pattern
             .rotations
