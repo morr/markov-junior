@@ -6,8 +6,9 @@ const DEFAULT_SIZE: usize = 100;
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut maybe_seed = None;
-    let mut maybe_output_file = None;
     let mut size = DEFAULT_SIZE;
+    let mut maybe_output_file = None;
+    let mut maybe_log_cmd = None;
 
     let mut i = 1;
     while i < args.len() {
@@ -15,12 +16,6 @@ fn main() {
             "--seed" => {
                 if i + 1 < args.len() {
                     maybe_seed = args[i + 1].parse().ok();
-                    i += 1;
-                }
-            }
-            "--output" => {
-                if i + 1 < args.len() {
-                    maybe_output_file = Some(args[i + 1].clone());
                     i += 1;
                 }
             }
@@ -36,6 +31,18 @@ fn main() {
                             DEFAULT_SIZE
                         }
                     };
+                    i += 1;
+                }
+            }
+            "--output" => {
+                if i + 1 < args.len() {
+                    maybe_output_file = Some(args[i + 1].clone());
+                    i += 1;
+                }
+            }
+            "--log_cmd" => {
+                if i + 1 < args.len() {
+                    maybe_log_cmd = Some(args[i + 1].clone());
                     i += 1;
                 }
             }
@@ -72,13 +79,15 @@ fn main() {
     for rule_index in 0..mj.rules.len() {
         if let Some(ref output_file) = maybe_output_file {
             mj.log_grid(output_file.clone());
-            std::process::Command::new("sh")
-                .arg("-c")
-                .arg("cat output.txt | pattern-to-png 1x | imgcat --width=50")
-                .stdout(std::process::Stdio::inherit())
-                .stderr(std::process::Stdio::inherit())
-                .status()
-                .expect("Failed to execute shell command");
+            if let Some(ref log_cmd) = maybe_log_cmd {
+                std::process::Command::new("sh")
+                    .arg("-c")
+                    .arg(log_cmd)
+                    .stdout(std::process::Stdio::inherit())
+                    .stderr(std::process::Stdio::inherit())
+                    .status()
+                    .expect("Failed to execute shell command");
+            }
         }
         mj.generate(rule_index);
     }
