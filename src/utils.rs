@@ -6,9 +6,9 @@ pub fn parse_xml(xml: &str, seed: Option<u64>) -> MarkovJunior {
 
     let width = root.attribute("width").unwrap().parse().unwrap();
     let height = root.attribute("height").unwrap().parse().unwrap();
-    let initial_value = root.attribute("value").unwrap().chars().next().unwrap();
+    let initial_fill = root.attribute("fill").unwrap().chars().next().unwrap();
 
-    let mut markov = MarkovJunior::new(initial_value, width, height, seed);
+    let mut markov = MarkovJunior::new(initial_fill, width, height, seed);
 
     for node in root.children().filter(|n| n.is_element()) {
         let rule_kind = match node.tag_name().name() {
