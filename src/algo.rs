@@ -79,9 +79,16 @@ impl MarkovJunior {
             }
         }
         println!(
-            "rule: {rule_index} changes: {}",
+            "rule: {rule_index} steps: {:?} changes: {}",
+            self.rules[rule_index].steps,
             self.changes - prev_changes
         );
+        for pattern_rule in self.rules[rule_index].patterns.iter() {
+            println!(
+                "{} => {}",
+                pattern_rule.input.line, pattern_rule.output.line,
+            );
+        }
         // self.print_grid();
     }
 
