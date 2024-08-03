@@ -78,26 +78,31 @@ fn main() {
 
     for rule_index in 0..mj.rules.len() {
         if let Some(ref output_file) = maybe_output_file {
-            mj.log_grid(output_file.clone());
-            if let Some(ref log_cmd) = maybe_log_cmd {
-                std::process::Command::new("sh")
-                    .arg("-c")
-                    .arg(log_cmd)
-                    .stdout(std::process::Stdio::inherit())
-                    .stderr(std::process::Stdio::inherit())
-                    .status()
-                    .expect("Failed to execute shell command");
-            }
+            log(&mj, output_file, maybe_log_cmd.as_deref());
         }
         mj.generate(rule_index);
     }
 
     if let Some(output_file) = maybe_output_file {
-        mj.log_grid(output_file);
+        log(&mj, &output_file, maybe_log_cmd.as_deref());
     } else {
         mj.print_grid();
     }
 
     println!("seed: {}", mj.seed);
     println!("patterns_applied: {}", mj.patterns_applied_counter);
+}
+
+fn log(mj: &MarkovJunior, output_file: &str, maybe_log_cmd: Option<&str>) {
+    mj.log_grid(output_file.to_string());
+
+    if let Some(ref log_cmd) = maybe_log_cmd {
+        std::process::Command::new("sh")
+            .arg("-c")
+            .arg(log_cmd)
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .status()
+            .expect("Failed to execute shell command");
+    }
 }
