@@ -10,30 +10,33 @@ pub fn parse_xml(xml: &str, seed: Option<u64>) -> MarkovJunior {
 
     let mut markov = MarkovJunior::new(initial_fill, width, height, seed);
 
-    for node in root.children().filter(|n| n.is_element()) {
-        let rule_kind = match node.tag_name().name() {
+    for rule_node in root.children().filter(|n| n.is_element()) {
+        let rule_kind = match rule_node.tag_name().name() {
             "one" => RuleKind::One,
             "all" => RuleKind::All,
             "prl" => RuleKind::Parallel,
             _ => continue,
         };
 
-        let steps = node.attribute("steps").and_then(|s| s.parse().ok());
+        let steps = rule_node.attribute("steps").and_then(|s| s.parse().ok());
 
-        let patterns = if node.has_attribute("in") && node.has_attribute("out") {
+        let patterns = if rule_node.has_attribute("in") && rule_node.has_attribute("out") {
             vec![PatternRule::new(
-                Pattern::new(node.attribute("in").unwrap()),
-                Pattern::new(node.attribute("out").unwrap()),
-                None,
+                Pattern::new(rule_node.attribute("in").unwrap()),
+                Pattern::new(rule_node.attribute("out").unwrap()),
+                rule_node
+                    .attribute("p")
+                    .map(|str| str.parse::<f32>().unwrap()),
             )]
         } else {
-            node.children()
+            rule_node
+                .children()
                 .filter(|n| n.is_element() && n.tag_name().name() == "rule")
                 .map(|n| {
                     PatternRule::new(
                         Pattern::new(n.attribute("in").unwrap()),
                         Pattern::new(n.attribute("out").unwrap()),
-                        None,
+                        n.attribute("p").map(|str| str.parse::<f32>().unwrap()),
                     )
                 })
                 .collect()
