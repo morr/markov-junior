@@ -5,7 +5,7 @@ use markov_junior::*;
 fn set_pattern(mj: &mut MarkovJunior, line: &str) -> Pattern {
     let pattern = Pattern::new(line);
     mj.add_rule(Rule {
-        patterns: vec![PatternRule::new(pattern.clone(), pattern.clone())],
+        patterns: vec![PatternRule::new(pattern.clone(), pattern.clone(), None)],
         kind: RuleKind::One,
         steps: None,
     });
@@ -134,9 +134,7 @@ fn test_pattern_fits_canonical_2() {
                 mj.pattern_fits(0, 0, &pattern),
                 mj.pattern_fits_canonical(0, 0, &pattern)
             );
-
         }
-
     }
 }
 
@@ -147,7 +145,6 @@ fn test_pattern_fits_canonical_2() {
 //     assert_eq!(mj.pattern_fits(0, 0, &pattern), Some(2));
 //     assert_eq!(mj.pattern_fits_canonical(0, 0, &pattern), Some(2));
 // }
-
 
 #[test]
 fn test_pattern_fits() {
@@ -465,7 +462,11 @@ fn test_generate() {
         b'B', b'W', b'G'
     ];
     mj.add_rule(Rule {
-        patterns: vec![PatternRule::new(Pattern::new("BW"), Pattern::new("WW"))],
+        patterns: vec![PatternRule::new(
+            Pattern::new("BW"),
+            Pattern::new("WW"),
+            None,
+        )],
         kind: RuleKind::One,
         steps: None,
     });
@@ -493,7 +494,11 @@ fn test_generate_2() {
     ];
 
     mj.add_rule(Rule {
-        patterns: vec![PatternRule::new(Pattern::new("WG"), Pattern::new("WR"))],
+        patterns: vec![PatternRule::new(
+            Pattern::new("WG"),
+            Pattern::new("WR"),
+            None,
+        )],
         kind: RuleKind::One,
         steps: None,
     });
@@ -520,12 +525,20 @@ fn test_generate_3() {
         b'B', b'W', b'G'
     ];
     mj.add_rule(Rule {
-        patterns: vec![PatternRule::new(Pattern::new("BW"), Pattern::new("WW"))],
+        patterns: vec![PatternRule::new(
+            Pattern::new("BW"),
+            Pattern::new("WW"),
+            None,
+        )],
         kind: RuleKind::One,
         steps: None,
     });
     mj.add_rule(Rule {
-        patterns: vec![PatternRule::new(Pattern::new("WG"), Pattern::new("WR"))],
+        patterns: vec![PatternRule::new(
+            Pattern::new("WG"),
+            Pattern::new("WR"),
+            None,
+        )],
         kind: RuleKind::One,
         steps: None,
     });
@@ -549,12 +562,20 @@ fn test_generate_4() {
         b'G', b'G', b'G'
     ];
     mj.add_rule(Rule {
-        patterns: vec![PatternRule::new(Pattern::new("BW"), Pattern::new("WW"))],
+        patterns: vec![PatternRule::new(
+            Pattern::new("BW"),
+            Pattern::new("WW"),
+            None,
+        )],
         kind: RuleKind::One,
         steps: None,
     });
     mj.add_rule(Rule {
-        patterns: vec![PatternRule::new(Pattern::new("WG"), Pattern::new("WR"))],
+        patterns: vec![PatternRule::new(
+            Pattern::new("WG"),
+            Pattern::new("WR"),
+            None,
+        )],
         kind: RuleKind::One,
         steps: None,
     });
@@ -579,7 +600,11 @@ fn test_generate_5() {
     ];
 
     mj.add_rule(Rule {
-        patterns: vec![PatternRule::new(Pattern::new("BW"), Pattern::new("WW"))],
+        patterns: vec![PatternRule::new(
+            Pattern::new("BW"),
+            Pattern::new("WW"),
+            None,
+        )],
         kind: RuleKind::One,
         steps: None,
     });
@@ -606,7 +631,11 @@ fn test_generate_6() {
     ];
 
     mj.add_rule(Rule {
-        patterns: vec![PatternRule::new(Pattern::new("WB"), Pattern::new("WW"))],
+        patterns: vec![PatternRule::new(
+            Pattern::new("WB"),
+            Pattern::new("WW"),
+            None,
+        )],
         kind: RuleKind::One,
         steps: None,
     });
@@ -636,6 +665,7 @@ fn test_generate_7() {
         patterns: vec![PatternRule::new(
             Pattern::new("BU/UB"),
             Pattern::new("U*/**"),
+            None,
         )],
         kind: RuleKind::One,
         steps: None,

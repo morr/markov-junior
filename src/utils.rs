@@ -24,6 +24,7 @@ pub fn parse_xml(xml: &str, seed: Option<u64>) -> MarkovJunior {
             vec![PatternRule::new(
                 Pattern::new(node.attribute("in").unwrap()),
                 Pattern::new(node.attribute("out").unwrap()),
+                None,
             )]
         } else {
             node.children()
@@ -32,6 +33,7 @@ pub fn parse_xml(xml: &str, seed: Option<u64>) -> MarkovJunior {
                     PatternRule::new(
                         Pattern::new(n.attribute("in").unwrap()),
                         Pattern::new(n.attribute("out").unwrap()),
+                        None,
                     )
                 })
                 .collect()

@@ -5,18 +5,22 @@ use std::cmp::Ordering;
 pub struct PatternRule {
     pub input: Pattern,
     pub output: Pattern,
-    pub weight: f32,
+    pub probability: f32,
     pub canonical_key: Option<(usize, usize)>,
 }
 
 impl PatternRule {
-    pub fn new(input: Pattern, output: Pattern) -> PatternRule {
+    pub fn new(input: Pattern, output: Pattern, maybe_probability: Option<f32>) -> PatternRule {
         let canonical_key = Self::calculate_canonical_key(input.width, input.height);
 
         PatternRule {
             input,
             output,
-            weight: 1.0,
+            probability: if let Some(probability) = maybe_probability {
+                probability
+            } else {
+                1.0
+            },
             canonical_key,
         }
     }
@@ -255,7 +259,6 @@ impl Pattern {
             // (1, -2) => -2,
             // (1, -3) => -3,
             // (1, -4) => -4,
-
             (2, 1) => 4,
             (2, 2) => 1,
             (2, 3) => 2,

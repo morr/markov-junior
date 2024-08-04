@@ -395,7 +395,7 @@ impl MarkovJunior {
                         maybe_pattern_match.map(|rotation| PatternMatch {
                             x,
                             y,
-                            weight: pattern_rule.weight,
+                            weight: pattern_rule.probability,
                             pattern_index,
                             rotation,
                         })
