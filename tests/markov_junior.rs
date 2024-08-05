@@ -453,7 +453,7 @@ fn test_apply_pattern_at_edge() {
     );
 }
 
-fn rule_to_sequnce<I>(rule_or_rules: I) -> Sequence
+fn rule_to_sequence<I>(rule_or_rules: I) -> Sequence
 where
     I: IntoIterator<Item = Rule>,
 {
@@ -473,7 +473,7 @@ fn test_generate() {
         b'B', b'W', b'G',
         b'B', b'W', b'G'
     ];
-    let sequence = rule_to_sequnce(Rule {
+    let sequence = rule_to_sequence(Rule {
         patterns: vec![PatternRule::new(
             Pattern::new("BW"),
             Pattern::new("WW"),
@@ -504,7 +504,7 @@ fn test_generate_2() {
         b'B', b'W', b'G'
     ];
 
-    let sequence = rule_to_sequnce(Rule {
+    let sequence = rule_to_sequence(Rule {
         patterns: vec![PatternRule::new(
             Pattern::new("WG"),
             Pattern::new("WR"),
@@ -533,7 +533,7 @@ fn test_generate_3() {
         b'B', b'W', b'G',
         b'B', b'W', b'G'
     ];
-    let sequence = rule_to_sequnce(vec![Rule {
+    let sequence = rule_to_sequence(vec![Rule {
         patterns: vec![PatternRule::new(
             Pattern::new("BW"),
             Pattern::new("WW"),
@@ -570,7 +570,7 @@ fn test_generate_4() {
         b'W', b'W', b'W',
         b'G', b'G', b'G'
     ];
-    let sequence = rule_to_sequnce(vec![Rule {
+    let sequence = rule_to_sequence(vec![Rule {
         patterns: vec![PatternRule::new(
             Pattern::new("BW"),
             Pattern::new("WW"),
@@ -608,7 +608,7 @@ fn test_generate_5() {
         b'G', b'G', b'G'
     ];
 
-    let sequence = rule_to_sequnce(Rule {
+    let sequence = rule_to_sequence(Rule {
         patterns: vec![PatternRule::new(
             Pattern::new("BW"),
             Pattern::new("WW"),
@@ -638,7 +638,7 @@ fn test_generate_6() {
         b'B', b'B', b'W',
     ];
 
-    let sequence = rule_to_sequnce(Rule {
+    let sequence = rule_to_sequence(Rule {
         patterns: vec![PatternRule::new(
             Pattern::new("WB"),
             Pattern::new("WW"),
@@ -667,7 +667,7 @@ fn test_generate_7() {
         b'B', b'U',
     ];
 
-    let sequence = rule_to_sequnce(Rule {
+    let sequence = rule_to_sequence(Rule {
         patterns: vec![PatternRule::new(
             Pattern::new("BU/UB"),
             Pattern::new("U*/**"),
