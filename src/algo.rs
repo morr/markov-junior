@@ -214,6 +214,13 @@ impl MarkovJunior {
         let mut changes = Vec::new();
 
         for pattern_match in valid_patterns {
+            if pattern_match.probability != DEFAULT_PROBABILITY {
+                let choise = self.rng.gen::<f32>();
+                if choise > pattern_match.probability {
+                    continue;
+                }
+            }
+
             let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
             let pattern = pattern_rule.output.clone();
             let is_canonical_key = pattern_rule.canonical_key.is_some();
@@ -258,6 +265,13 @@ impl MarkovJunior {
         let mut changes = Vec::new();
 
         for pattern_match in valid_patterns {
+            if pattern_match.probability != DEFAULT_PROBABILITY {
+                let choise = self.rng.gen::<f32>();
+                if choise > pattern_match.probability {
+                    continue;
+                }
+            }
+
             let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
             let output = pattern_rule.output.clone();
 

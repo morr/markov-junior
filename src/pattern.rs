@@ -9,7 +9,7 @@ pub struct PatternRule {
     pub canonical_key: Option<(usize, usize)>,
 }
 
-const DEFAULT_PROBABILITY: f32 = 1.0;
+pub const DEFAULT_PROBABILITY: f32 = 1.0;
 
 impl PatternRule {
     pub fn new(input: Pattern, output: Pattern, maybe_probability: Option<f32>) -> PatternRule {
