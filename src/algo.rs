@@ -84,10 +84,17 @@ impl MarkovJunior {
             self.changes - prev_changes
         );
         for pattern_rule in self.rules[rule_index].patterns.iter() {
-            println!(
-                "in=\"{}\" out=\"{}\"",
-                pattern_rule.input.line, pattern_rule.output.line,
-            );
+            if let Some(probability) = pattern_rule.probability {
+                println!(
+                    "in=\"{}\" out=\"{}\" p=\"{}\"",
+                    pattern_rule.input.line, pattern_rule.output.line, probability
+                );
+            } else {
+                println!(
+                    "in=\"{}\" out=\"{}\"",
+                    pattern_rule.input.line, pattern_rule.output.line,
+                );
+            }
         }
         // self.print_grid();
     }
