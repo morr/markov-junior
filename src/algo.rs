@@ -45,50 +45,113 @@ impl MarkovJunior {
         }
     }
 
-    pub fn generate_all(&mut self, sequence: &Sequence) {
-        for rule in &sequence.rules {
-            self.generate(rule);
+    pub fn apply_sequence(&mut self, sequence: &Sequence) -> bool {
+        let steps = self.width * self.height * 16;
+        let mut any_change = false;
+
+        for _ in 0..steps {
+            let mut step_change = false;
+
+            for rule_or_sequence in &sequence.vec {
+                match rule_or_sequence {
+                    RuleOrSequence::Rule(rule) => {
+                        step_change |= self.apply_rule(rule);
+                    }
+                    RuleOrSequence::Sequence(nested_sequence) => {
+                        step_change |= self.apply_sequence(nested_sequence);
+                    }
+                }
+
+                if step_change {
+                    break;
+                }
+            }
+
+            any_change |= step_change;
+
+            if !step_change {
+                break;
+            }
         }
+
+        any_change
     }
 
-    pub fn generate(&mut self, rule: &Rule) {
+    pub fn apply_rule(&mut self, rule: &Rule) -> bool {
         let steps = rule.steps.unwrap_or(self.width * self.height * 16);
-        let kind = rule.kind;
-
         let prev_changes = self.changes;
+
         self.precompute_canonical_forms(rule);
         let mut cache = self.compute_cache(rule, &(0..self.width), &(0..self.height));
 
-        for _step in 0..steps {
-            let any_change = match kind {
+        let mut any_change = false;
+
+        for _ in 0..steps {
+            let step_change = match rule.kind {
                 RuleKind::One => self.apply_one_rule(rule, &mut cache),
                 RuleKind::All => self.apply_all_rule(rule, &mut cache),
                 RuleKind::Parallel => self.apply_parallel_rule(rule, &mut cache),
             };
 
-            if !any_change {
+            any_change |= step_change;
+
+            if !step_change {
                 break;
             }
         }
+
         println!(
-            "Rule applied. Steps: {:?}. Changes: {}",
+            "Rule kind: {:?}, steps: {:?}, changes: {}",
+            rule.kind,
             rule.steps,
             self.changes - prev_changes
         );
-        for pattern_rule in rule.patterns.iter() {
-            if let Some(probability) = pattern_rule.probability {
-                println!(
-                    "in=\"{}\" out=\"{}\" p=\"{}\"",
-                    pattern_rule.input.line, pattern_rule.output.line, probability
-                );
-            } else {
-                println!(
-                    "in=\"{}\" out=\"{}\"",
-                    pattern_rule.input.line, pattern_rule.output.line,
-                );
-            }
-        }
+
+        any_change
     }
+
+    // pub fn generate(&mut self) {
+    //     self.apply_sequence(&self.main_sequence);
+    // }
+    //
+    // pub fn generate(&mut self, rule_or_seq: &RuleOrSequence) {
+    //     let steps = rule.steps.unwrap_or(self.width * self.height * 16);
+    //     let kind = rule.kind;
+    //
+    //     let prev_changes = self.changes;
+    //     self.precompute_canonical_forms(rule);
+    //     let mut cache = self.compute_cache(rule, &(0..self.width), &(0..self.height));
+    //
+    //     for _step in 0..steps {
+    //         let any_change = match kind {
+    //             RuleKind::One => self.apply_one_rule(rule, &mut cache),
+    //             RuleKind::All => self.apply_all_rule(rule, &mut cache),
+    //             RuleKind::Parallel => self.apply_parallel_rule(rule, &mut cache),
+    //         };
+    //
+    //         if !any_change {
+    //             break;
+    //         }
+    //     }
+    //     println!(
+    //         "Rule applied. Steps: {:?}. Changes: {}",
+    //         rule.steps,
+    //         self.changes - prev_changes
+    //     );
+    //     for pattern_rule in rule.patterns.iter() {
+    //         if let Some(probability) = pattern_rule.probability {
+    //             println!(
+    //                 "in=\"{}\" out=\"{}\" p=\"{}\"",
+    //                 pattern_rule.input.line, pattern_rule.output.line, probability
+    //             );
+    //         } else {
+    //             println!(
+    //                 "in=\"{}\" out=\"{}\"",
+    //                 pattern_rule.input.line, pattern_rule.output.line,
+    //             );
+    //         }
+    //     }
+    // }
 
     pub fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<isize> {
         // ensure pattern definitely fits within the grid boundaries
@@ -352,7 +415,7 @@ impl MarkovJunior {
         }
     }
 
-    fn precompute_canonical_forms(&mut self, rule: &Rule) {
+    pub fn precompute_canonical_forms(&mut self, rule: &Rule) {
         for pattern_rule in rule.patterns.iter() {
             let Some(canonical_key) = pattern_rule.canonical_key else {
                 continue;

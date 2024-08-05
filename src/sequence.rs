@@ -1,7 +1,14 @@
 use crate::*;
 
+#[derive(Debug)]
 pub struct Sequence {
-    pub rules: Vec<Rule>,
+    pub vec: Vec<RuleOrSequence>
+}
+
+#[derive(Debug)]
+pub enum RuleOrSequence {
+    Rule(Rule),
+    Sequence(Sequence),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -16,6 +23,16 @@ pub struct Rule {
     pub patterns: Vec<PatternRule>,
     pub kind: RuleKind,
     pub steps: Option<usize>,
+}
+
+// it is implemented for tests so rule can be converted into iterator
+impl IntoIterator for Rule {
+    type Item = Rule;
+    type IntoIter = std::vec::IntoIter<Rule>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        vec![self].into_iter()
+    }
 }
 
 impl Rule {
