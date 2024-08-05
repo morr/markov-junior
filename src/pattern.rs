@@ -9,6 +9,8 @@ pub struct PatternRule {
     pub canonical_key: Option<(usize, usize)>,
 }
 
+const DEFAULT_PROBABILITY: f32 = 1.0;
+
 impl PatternRule {
     pub fn new(input: Pattern, output: Pattern, maybe_probability: Option<f32>) -> PatternRule {
         let canonical_key = Self::calculate_canonical_key(input.width, input.height);
@@ -16,11 +18,7 @@ impl PatternRule {
         PatternRule {
             input,
             output,
-            probability: if let Some(probability) = maybe_probability {
-                probability
-            } else {
-                1.0
-            },
+            probability: maybe_probability.unwrap_or(DEFAULT_PROBABILITY),
             canonical_key,
         }
     }
