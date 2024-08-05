@@ -162,14 +162,14 @@ impl MarkovJunior {
 
         let total_weight: f32 = valid_patterns
             .iter()
-            .map(|pattern_match| pattern_match.probability)
+            .map(|pattern_match| pattern_match.probability.unwrap_or(DEFAULT_PROBABILITY))
             .sum();
         let mut choice = self.rng.gen::<f32>() * total_weight;
         let mut selected_change = None;
 
         for pattern_match in valid_patterns {
             // println!("{:?}", pattern_match);
-            choice -= pattern_match.probability;
+            choice -= pattern_match.probability.unwrap_or(DEFAULT_PROBABILITY);
 
             if choice <= 0.0 {
                 let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
@@ -214,9 +214,9 @@ impl MarkovJunior {
         let mut changes = Vec::new();
 
         for pattern_match in valid_patterns {
-            if pattern_match.probability != DEFAULT_PROBABILITY {
+            if let Some(probability) = pattern_match.probability {
                 let choise = self.rng.gen::<f32>();
-                if choise > pattern_match.probability {
+                if choise > probability {
                     continue;
                 }
             }
@@ -265,9 +265,9 @@ impl MarkovJunior {
         let mut changes = Vec::new();
 
         for pattern_match in valid_patterns {
-            if pattern_match.probability != DEFAULT_PROBABILITY {
+            if let Some(probability) = pattern_match.probability {
                 let choise = self.rng.gen::<f32>();
-                if choise > pattern_match.probability {
+                if choise > probability {
                     continue;
                 }
             }

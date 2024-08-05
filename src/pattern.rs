@@ -5,20 +5,20 @@ use std::cmp::Ordering;
 pub struct PatternRule {
     pub input: Pattern,
     pub output: Pattern,
-    pub probability: f32,
+    pub probability: Option<f32>,
     pub canonical_key: Option<(usize, usize)>,
 }
 
 pub const DEFAULT_PROBABILITY: f32 = 1.0;
 
 impl PatternRule {
-    pub fn new(input: Pattern, output: Pattern, maybe_probability: Option<f32>) -> PatternRule {
+    pub fn new(input: Pattern, output: Pattern, probability: Option<f32>) -> PatternRule {
         let canonical_key = Self::calculate_canonical_key(input.width, input.height);
 
         PatternRule {
             input,
             output,
-            probability: maybe_probability.unwrap_or(DEFAULT_PROBABILITY),
+            probability,
             canonical_key,
         }
     }
@@ -44,7 +44,7 @@ pub struct RotatedSeq {
 pub struct PatternMatch {
     pub x: usize,
     pub y: usize,
-    pub probability: f32,
+    pub probability: Option<f32>,
     pub pattern_index: usize,
     pub rotation: isize,
 }

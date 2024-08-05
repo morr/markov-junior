@@ -36,12 +36,12 @@ fn river_xml(size: usize) -> String {
           <one>
             <rule in="RB" out="RR"/>
             <rule in="WB" out="WW"/>
-          </one>
+            </one>
           <all in="RW" out="UU"/>
           <all>
             <rule in="W" out="B"/>
             <rule in="R" out="B"/>
-          </all>
+            </all>
           <all in="UB" out="UU" steps="1"/>
           <all in="BU/UB" out="U*/**"/>
           <all in="UB" out="*G"/>
@@ -59,47 +59,47 @@ fn river_xml(size: usize) -> String {
 fn fire_noise_xml(size: usize) -> String {
     format!(
         r#"
-         <sequence fill="B" width="{size}" height="{size}">
-           <prl steps="75">
-             <rule in="OG" out="*O"/>
-             <rule in="O*/*G" out="**/*O"/>
-             <rule in="B" out="G" p="0.01"/>
-             <rule in="O" out="B"/>
-             <rule in="G" out="O" p="0.0001"/>
-           </prl>
-           <all in="*G*/GBG" out="***/*G*"/>
-           <all>
-             <rule in="*B*/BGB/*B*" out="***/*B*/***"/>
-             <rule in="*BB*/BGGB/*BB*" out="****/*BB*/****"/>
-           </all>
-           <markov>
-             <sequence>
-               <one in="G" out="R" steps="1"/>
-               <all in="RG" out="RR" steps="10"/>
-               <all in="RG" out="EE"/>
-               <all>
-                 <rule in="ER" out="*E"/>
-                 <rule in="EG" out="*E"/>
-               </all>
-             </sequence>
-           </markov>
-           <markov>
-             <sequence>
-               <one in="B" out="K" steps="1"/>
-               <all in="KB" out="*K" steps="10"/>
-               <all in="KB" out="GG"/>
-               <all>
-                 <rule in="GB" out="*G"/>
-                 <rule in="GK" out="*G"/>
-               </all>
-             </sequence>
-           </markov>
-           <prl>
-             <rule in="K" out="E"/>
-             <rule in="G" out="B"/>
-           </prl>
-         </sequence>
-         "#
+        <sequence fill="B" width="{size}" height="{size}">
+          <prl steps="75">
+            <rule in="OG" out="*O"/>
+            <rule in="O*/*G" out="**/*O"/>
+            <rule in="B" out="G" p="0.01"/>
+            <rule in="O" out="B"/>
+            <rule in="G" out="O" p="0.0001"/>
+          </prl>
+          <all in="*G*/GBG" out="***/*G*"/>
+          <all>
+            <rule in="*B*/BGB/*B*" out="***/*B*/***"/>
+            <rule in="*BB*/BGGB/*BB*" out="****/*BB*/****"/>
+          </all>
+          <markov>
+            <sequence>
+              <one in="G" out="R" steps="1"/>
+              <all in="RG" out="RR" steps="10"/>
+              <all in="RG" out="EE"/>
+              <all>
+                <rule in="ER" out="*E"/>
+                <rule in="EG" out="*E"/>
+              </all>
+            </sequence>
+          </markov>
+          <markov>
+            <sequence>
+              <one in="B" out="K" steps="1"/>
+              <all in="KB" out="*K" steps="10"/>
+              <all in="KB" out="GG"/>
+              <all>
+                <rule in="GB" out="*G"/>
+                <rule in="GK" out="*G"/>
+              </all>
+            </sequence>
+          </markov>
+          <prl>
+            <rule in="K" out="E"/>
+            <rule in="G" out="B"/>
+          </prl>
+        </sequence>
+        "#
     )
 }
 
@@ -108,11 +108,11 @@ fn test_xml(size: usize) -> String {
         r#"
         <sequence fill="B" width="{size}" height="{size}">
           <prl steps="75">
-             <rule in="OG" out="*O"/>
-             <rule in="O*/*G" out="**/*O"/>
-             <rule in="B" out="G" p="0.01"/>
-             <rule in="O" out="B"/>
-             <rule in="G" out="O" p="0.0001"/>
+            <rule in="OG" out="*O"/>
+            <rule in="O*/*G" out="**/*O"/>
+            <rule in="B" out="G" p="0.01"/>
+            <rule in="O" out="B"/>
+            <rule in="G" out="O" p="0.0001"/>
           </prl>
           <all in="*G*/GBG" out="***/*G*"/>
           <all>
