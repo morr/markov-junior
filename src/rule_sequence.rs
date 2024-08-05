@@ -2,7 +2,8 @@ use crate::*;
 
 #[derive(Debug)]
 pub struct Sequence {
-    pub vec: Vec<RuleOrSequence>
+    pub vec: Vec<RuleOrSequence>,
+    pub steps: Option<usize>,
 }
 
 #[derive(Debug)]

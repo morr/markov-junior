@@ -3,20 +3,28 @@ use roxmltree::Node;
 
 fn parse_rule_or_sequence(node: &Node) -> RuleOrSequence {
     match node.tag_name().name() {
-        "sequence" => RuleOrSequence::Sequence(parse_sequence(node)),
+        "sequence" => RuleOrSequence::Sequence(parse_sequence(node, false)),
         _ => RuleOrSequence::Rule(parse_rule(node)),
     }
 }
 
-fn parse_sequence(node: &Node) -> Sequence {
-    let rules = node
+fn parse_sequence(node: &Node, is_root: bool) -> Sequence {
+    let vec = node
         .children()
         .filter(|n| n.is_element())
         .map(|n| parse_rule_or_sequence(&n))
         .collect();
-    // let steps = node.attribute("steps").and_then(|s| s.parse().ok());
-    // Sequence::new(rules, steps)
-    Sequence { vec: rules }
+
+    let steps = node.attribute("steps").and_then(|s| s.parse().ok());
+
+    Sequence {
+        vec,
+        steps: if steps.is_none() && is_root {
+            Some(1)
+        } else {
+            steps
+        },
+    }
 }
 
 fn parse_rule(node: &Node) -> Rule {
@@ -59,5 +67,8 @@ pub fn parse_xml(xml: &str, seed: Option<u64>) -> (MarkovJunior, Sequence) {
     let height = root.attribute("height").unwrap().parse().unwrap();
     let initial_fill = root.attribute("fill").unwrap().chars().next().unwrap();
 
-    (MarkovJunior::new(initial_fill, width, height, seed), parse_sequence(&root))
+    (
+        MarkovJunior::new(initial_fill, width, height, seed),
+        parse_sequence(&root, true),
+    )
 }

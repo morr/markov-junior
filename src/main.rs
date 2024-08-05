@@ -7,7 +7,7 @@ fn main() {
     let mut maybe_size = None;
     let mut maybe_model = None;
     let mut maybe_output_file = None;
-    let mut _maybe_log_cmd = None;
+    let mut maybe_log_cmd = None;
 
     let mut i = 1;
     while i < args.len() {
@@ -38,7 +38,7 @@ fn main() {
             }
             "--log_cmd" => {
                 if i + 1 < args.len() {
-                    _maybe_log_cmd = Some(args[i + 1].clone());
+                    maybe_log_cmd = Some(args[i + 1].clone());
                     i += 1;
                 }
             }
@@ -60,14 +60,14 @@ fn main() {
     //     }
     // }
 
-    // if let Some(output_file) = maybe_output_file {
-    //     log(&mj, &output_file, maybe_log_cmd.as_deref());
-    // } else {
-    //     mj.print_grid();
-    // }
-    if maybe_output_file.is_none() {
+    if let Some(output_file) = maybe_output_file {
+        log(&mj, &output_file, maybe_log_cmd.as_deref());
+    } else {
         mj.print_grid();
     }
+    // if maybe_output_file.is_none() {
+    //     mj.print_grid();
+    // }
 
     println!("seed: {}", mj.seed);
     println!("changes: {}", mj.changes);

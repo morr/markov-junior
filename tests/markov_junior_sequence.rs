@@ -10,7 +10,7 @@ where
         .map(RuleOrSequence::Rule)
         .collect::<Vec<_>>();
 
-    Sequence { vec }
+    Sequence { vec, steps: None }
 }
 
 #[test]
