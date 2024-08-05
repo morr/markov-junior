@@ -1,6 +1,6 @@
 use crate::*;
 
-pub fn parse_xml(xml: &str, seed: Option<u64>) -> MarkovJunior {
+pub fn parse_xml(xml: &str, seed: Option<u64>) -> (MarkovJunior, Sequence) {
     let doc = roxmltree::Document::parse(xml).unwrap();
     let root = doc.root_element();
 
@@ -8,7 +8,8 @@ pub fn parse_xml(xml: &str, seed: Option<u64>) -> MarkovJunior {
     let height = root.attribute("height").unwrap().parse().unwrap();
     let initial_fill = root.attribute("fill").unwrap().chars().next().unwrap();
 
-    let mut markov = MarkovJunior::new(initial_fill, width, height, seed);
+    let markov = MarkovJunior::new(initial_fill, width, height, seed);
+    let mut sequence = Sequence { rules: Vec::new() };
 
     for rule_node in root.children().filter(|n| n.is_element()) {
         let rule_kind = match rule_node.tag_name().name() {
@@ -43,8 +44,8 @@ pub fn parse_xml(xml: &str, seed: Option<u64>) -> MarkovJunior {
         };
 
         let rule = Rule::new(rule_kind, patterns, steps);
-        markov.add_rule(rule);
+        sequence.rules.push(rule);
     }
 
-    markov
+    (markov, sequence)
 }

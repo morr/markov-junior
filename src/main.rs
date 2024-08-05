@@ -50,11 +50,10 @@ fn main() {
     let size = maybe_size.expect("Error: --size argument is required");
 
     let xml = model_xml(model, size);
+    let (mut mj, sequence) = parse_xml(&xml, maybe_seed);
 
-    let mut mj = parse_xml(&xml, maybe_seed);
-
-    for rule_index in 0..mj.rules.len() {
-        mj.generate(rule_index);
+    for rule in &sequence.rules {
+        mj.generate(rule);
         if let Some(ref output_file) = maybe_output_file {
             log(&mj, output_file, maybe_log_cmd.as_deref());
         }

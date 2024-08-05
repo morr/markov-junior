@@ -1,5 +1,9 @@
 use crate::*;
 
+pub struct Sequence {
+    pub rules: Vec<Rule>,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum RuleKind {
     One,

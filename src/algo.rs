@@ -10,7 +10,6 @@ pub struct MarkovJunior {
     pub grid: Vec<u8>,
     pub width: usize,
     pub height: usize,
-    pub rules: Vec<Rule>,
     pub canonical_forms: BTreeMap<(usize, usize), Vec<RotatedSeq>>,
     pub changes: usize,
     pub rng: ChaCha8Rng,
@@ -25,7 +24,6 @@ impl MarkovJunior {
             grid: vec![default as u8; width * height],
             width,
             height,
-            rules: Vec::new(),
             canonical_forms: BTreeMap::new(),
             changes: 0,
             rng: ChaCha8Rng::seed_from_u64(seed),
@@ -40,7 +38,6 @@ impl MarkovJunior {
             grid: data.chars().map(|c| c as u8).collect(),
             width,
             height,
-            rules: Vec::new(),
             canonical_forms: BTreeMap::new(),
             changes: 0,
             rng: ChaCha8Rng::seed_from_u64(seed),
@@ -48,30 +45,25 @@ impl MarkovJunior {
         }
     }
 
-    pub fn add_rule(&mut self, rule: Rule) {
-        self.rules.push(rule);
-    }
-
-    pub fn generate_all(&mut self) {
-        for rule_index in 0..self.rules.len() {
-            self.generate(rule_index);
+    pub fn generate_all(&mut self, sequence: &Sequence) {
+        for rule in &sequence.rules {
+            self.generate(rule);
         }
     }
 
-    pub fn generate(&mut self, rule_index: usize) {
-        let rule = &self.rules[rule_index];
+    pub fn generate(&mut self, rule: &Rule) {
         let steps = rule.steps.unwrap_or(self.width * self.height * 16);
         let kind = rule.kind;
 
         let prev_changes = self.changes;
-        self.precompute_canonical_forms(rule_index);
-        let mut cache = self.compute_cache(rule_index, &(0..self.width), &(0..self.height));
+        self.precompute_canonical_forms(rule);
+        let mut cache = self.compute_cache(rule, &(0..self.width), &(0..self.height));
 
         for _step in 0..steps {
             let any_change = match kind {
-                RuleKind::One => self.apply_one_rule(rule_index, &mut cache),
-                RuleKind::All => self.apply_all_rule(rule_index, &mut cache),
-                RuleKind::Parallel => self.apply_parallel_rule(rule_index, &mut cache),
+                RuleKind::One => self.apply_one_rule(rule, &mut cache),
+                RuleKind::All => self.apply_all_rule(rule, &mut cache),
+                RuleKind::Parallel => self.apply_parallel_rule(rule, &mut cache),
             };
 
             if !any_change {
@@ -79,11 +71,11 @@ impl MarkovJunior {
             }
         }
         println!(
-            "rule: {rule_index} steps: {:?} changes: {}",
-            self.rules[rule_index].steps,
+            "Rule applied. Steps: {:?}. Changes: {}",
+            rule.steps,
             self.changes - prev_changes
         );
-        for pattern_rule in self.rules[rule_index].patterns.iter() {
+        for pattern_rule in rule.patterns.iter() {
             if let Some(probability) = pattern_rule.probability {
                 println!(
                     "in=\"{}\" out=\"{}\" p=\"{}\"",
@@ -96,7 +88,6 @@ impl MarkovJunior {
                 );
             }
         }
-        // self.print_grid();
     }
 
     pub fn pattern_fits_canonical(&self, x: usize, y: usize, pattern: &Pattern) -> Option<isize> {
@@ -158,7 +149,7 @@ impl MarkovJunior {
 
     fn apply_one_rule(
         &mut self,
-        rule_index: usize,
+        rule: &Rule,
         cache: &mut BTreeMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
         let valid_patterns = Self::cached_patterns(cache);
@@ -179,7 +170,7 @@ impl MarkovJunior {
             choice -= pattern_match.probability.unwrap_or(DEFAULT_PROBABILITY);
 
             if choice <= 0.0 {
-                let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
+                let pattern_rule = &rule.patterns[pattern_match.pattern_index];
                 let pattern = pattern_rule.output.clone();
                 let is_canonical_key = pattern_rule.canonical_key.is_some();
 
@@ -201,9 +192,9 @@ impl MarkovJunior {
             let x_range = Self::x_range(x, size, self.width);
             let y_range = Self::x_range(y, size, self.height);
             if is_canonical_key {
-                self.update_canonical_forms(&x_range, &y_range, rule_index);
+                self.update_canonical_forms(rule, &x_range, &y_range);
             }
-            cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
+            cache.extend(self.compute_cache(rule, &x_range, &y_range));
 
             return true;
         }
@@ -213,7 +204,7 @@ impl MarkovJunior {
 
     fn apply_all_rule(
         &mut self,
-        rule_index: usize,
+        rule: &Rule,
         cache: &mut BTreeMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
         let valid_patterns = Self::cached_patterns(cache);
@@ -228,7 +219,7 @@ impl MarkovJunior {
                 }
             }
 
-            let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
+            let pattern_rule = &rule.patterns[pattern_match.pattern_index];
             let pattern = pattern_rule.output.clone();
             let is_canonical_key = pattern_rule.canonical_key.is_some();
 
@@ -254,9 +245,9 @@ impl MarkovJunior {
             let x_range = Self::x_range(x, size, self.width);
             let y_range = Self::x_range(y, size, self.height);
             if is_canonical_key {
-                self.update_canonical_forms(&x_range, &y_range, rule_index);
+                self.update_canonical_forms(rule, &x_range, &y_range);
             }
-            cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
+            cache.extend(self.compute_cache(rule, &x_range, &y_range));
         }
 
         applied
@@ -264,7 +255,7 @@ impl MarkovJunior {
 
     fn apply_parallel_rule(
         &mut self,
-        rule_index: usize,
+        rule: &Rule,
         cache: &mut BTreeMap<(usize, usize), Vec<PatternMatch>>,
     ) -> bool {
         let valid_patterns = Self::cached_patterns(cache);
@@ -279,7 +270,7 @@ impl MarkovJunior {
                 }
             }
 
-            let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
+            let pattern_rule = &rule.patterns[pattern_match.pattern_index];
             let output = pattern_rule.output.clone();
 
             changes.push((
@@ -299,9 +290,9 @@ impl MarkovJunior {
             let x_range = Self::x_range(x, size, self.width);
             let y_range = Self::x_range(y, size, self.height);
             if is_canonical_key {
-                self.update_canonical_forms(&x_range, &y_range, rule_index);
+                self.update_canonical_forms(rule, &x_range, &y_range);
             }
-            cache.extend(self.compute_cache(rule_index, &x_range, &y_range));
+            cache.extend(self.compute_cache(rule, &x_range, &y_range));
         }
 
         applied
@@ -328,12 +319,12 @@ impl MarkovJunior {
 
     fn update_canonical_forms(
         &mut self,
+        rule: &Rule,
         x_range: &Range<usize>,
         y_range: &Range<usize>,
-        rule_index: usize,
     ) {
-        for pattern_index in 0..self.rules[rule_index].patterns.len() {
-            let pattern_rule = &self.rules[rule_index].patterns[pattern_index];
+        for pattern_index in 0..rule.patterns.len() {
+            let pattern_rule = &rule.patterns[pattern_index];
 
             let Some(canonical_key) = pattern_rule.canonical_key else {
                 continue;
@@ -361,8 +352,8 @@ impl MarkovJunior {
         }
     }
 
-    pub fn precompute_canonical_forms(&mut self, rule_index: usize) {
-        for pattern_rule in self.rules[rule_index].patterns.iter() {
+    fn precompute_canonical_forms(&mut self, rule: &Rule) {
+        for pattern_rule in rule.patterns.iter() {
             let Some(canonical_key) = pattern_rule.canonical_key else {
                 continue;
             };
@@ -394,7 +385,7 @@ impl MarkovJunior {
 
     pub fn compute_cache(
         &self,
-        rule_index: usize,
+        rule: &Rule,
         x_range: &Range<usize>,
         y_range: &Range<usize>,
     ) -> BTreeMap<(usize, usize), Vec<PatternMatch>> {
@@ -402,7 +393,7 @@ impl MarkovJunior {
             .clone()
             .flat_map(|y| x_range.clone().map(move |x| (x, y)))
             .map(|(x, y)| {
-                let valid_patterns = self.rules[rule_index]
+                let valid_patterns = rule
                     .patterns
                     .iter()
                     .enumerate()
