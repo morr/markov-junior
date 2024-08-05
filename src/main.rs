@@ -53,6 +53,7 @@ fn main() {
     let (mut mj, sequence) = parse_xml(&xml, maybe_seed);
 
     mj.apply_sequence(&sequence);
+
     // for rule_or_seq in &sequence.rules {
     //     mj.generate(rule_or_seq);
     //     if let Some(ref output_file) = maybe_output_file {
@@ -65,6 +66,7 @@ fn main() {
     } else {
         mj.print_grid();
     }
+
     // if maybe_output_file.is_none() {
     //     mj.print_grid();
     // }

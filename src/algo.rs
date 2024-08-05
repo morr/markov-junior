@@ -61,10 +61,6 @@ impl MarkovJunior {
                         step_change |= self.apply_sequence(nested_sequence);
                     }
                 }
-
-                if step_change {
-                    break;
-                }
             }
 
             any_change |= step_change;
