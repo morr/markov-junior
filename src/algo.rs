@@ -162,14 +162,14 @@ impl MarkovJunior {
 
         let total_weight: f32 = valid_patterns
             .iter()
-            .map(|pattern_match| pattern_match.weight)
+            .map(|pattern_match| pattern_match.probability)
             .sum();
         let mut choice = self.rng.gen::<f32>() * total_weight;
         let mut selected_change = None;
 
         for pattern_match in valid_patterns {
             // println!("{:?}", pattern_match);
-            choice -= pattern_match.weight;
+            choice -= pattern_match.probability;
 
             if choice <= 0.0 {
                 let pattern_rule = &self.rules[rule_index].patterns[pattern_match.pattern_index];
@@ -395,7 +395,7 @@ impl MarkovJunior {
                         maybe_pattern_match.map(|rotation| PatternMatch {
                             x,
                             y,
-                            weight: pattern_rule.probability,
+                            probability: pattern_rule.probability,
                             pattern_index,
                             rotation,
                         })

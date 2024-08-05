@@ -44,7 +44,7 @@ pub struct RotatedSeq {
 pub struct PatternMatch {
     pub x: usize,
     pub y: usize,
-    pub weight: f32,
+    pub probability: f32,
     pub pattern_index: usize,
     pub rotation: isize,
 }
