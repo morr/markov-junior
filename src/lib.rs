@@ -20,6 +20,6 @@ use_modules!(
     algo,
     models,
     pattern,
-    sequence,
+    rule_sequence,
     xml
 );
