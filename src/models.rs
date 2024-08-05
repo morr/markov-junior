@@ -72,28 +72,24 @@ fn fire_noise_xml(size: usize) -> String {
             <rule in="*B*/BGB/*B*" out="***/*B*/***"/>
             <rule in="*BB*/BGGB/*BB*" out="****/*BB*/****"/>
           </all>
-          <markov>
-            <sequence>
-              <one in="G" out="R" steps="1"/>
-              <all in="RG" out="RR" steps="10"/>
-              <all in="RG" out="EE"/>
-              <all>
-                <rule in="ER" out="*E"/>
-                <rule in="EG" out="*E"/>
-              </all>
-            </sequence>
-          </markov>
-          <markov>
-            <sequence>
-              <one in="B" out="K" steps="1"/>
-              <all in="KB" out="*K" steps="10"/>
-              <all in="KB" out="GG"/>
-              <all>
-                <rule in="GB" out="*G"/>
-                <rule in="GK" out="*G"/>
-              </all>
-            </sequence>
-          </markov>
+          <sequence>
+            <one in="G" out="R" steps="1"/>
+            <all in="RG" out="RR" steps="10"/>
+            <all in="RG" out="EE"/>
+            <all>
+              <rule in="ER" out="*E"/>
+              <rule in="EG" out="*E"/>
+            </all>
+          </sequence>
+          <sequence>
+            <one in="B" out="K" steps="1"/>
+            <all in="KB" out="*K" steps="10"/>
+            <all in="KB" out="GG"/>
+            <all>
+              <rule in="GB" out="*G"/>
+              <rule in="GK" out="*G"/>
+            </all>
+          </sequence>
           <prl>
             <rule in="K" out="E"/>
             <rule in="G" out="B"/>
@@ -119,6 +115,15 @@ fn test_xml(size: usize) -> String {
             <rule in="*B*/BGB/*B*" out="***/*B*/***"/>
             <rule in="*BB*/BGGB/*BB*" out="****/*BB*/****"/>
           </all>
+          <sequence>
+            <one in="G" out="R" steps="1"/>
+            <all in="RG" out="RR" steps="10"/>
+            <all in="RG" out="EE"/>
+            <all>
+              <rule in="ER" out="*E"/>
+              <rule in="EG" out="*E"/>
+            </all>
+          </sequence>
         </sequence>
         "#
     )
