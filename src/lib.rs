@@ -17,9 +17,9 @@ macro_rules! use_modules {
 // }
 
 use_modules!(
+    algo,
+    models,
     pattern,
     rule,
-    algo,
-    utils,
-    models
+    xml
 );
