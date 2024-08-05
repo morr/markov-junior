@@ -20,5 +20,6 @@ use_modules!(
     pattern,
     rule,
     algo,
-    utils
+    utils,
+    models
 );
