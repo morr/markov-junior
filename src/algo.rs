@@ -85,7 +85,7 @@ impl MarkovJunior {
         );
         for pattern_rule in self.rules[rule_index].patterns.iter() {
             println!(
-                "{} => {}",
+                "in=\"{}\" out=\"{}\"",
                 pattern_rule.input.line, pattern_rule.output.line,
             );
         }

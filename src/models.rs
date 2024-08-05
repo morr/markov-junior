@@ -76,7 +76,7 @@ fn fire_noise_xml(size: usize) -> String {
              <sequence>
                <one in="G" out="R" steps="1"/>
                <all in="RG" out="RR" steps="10"/>
-              <all in="RG" out="EE"/>
+               <all in="RG" out="EE"/>
                <all>
                  <rule in="ER" out="*E"/>
                  <rule in="EG" out="*E"/>
@@ -107,9 +107,18 @@ fn test_xml(size: usize) -> String {
     format!(
         r#"
         <sequence fill="B" width="{size}" height="{size}">
-          <prl steps="1">
-            <rule in="B" out="G" p="0.01"/>
+          <prl steps="75">
+             <rule in="OG" out="*O"/>
+             <rule in="O*/*G" out="**/*O"/>
+             <rule in="B" out="G" p="0.01"/>
+             <rule in="O" out="B"/>
+             <rule in="G" out="O" p="0.0001"/>
           </prl>
+          <all in="*G*/GBG" out="***/*G*"/>
+          <all>
+            <rule in="*B*/BGB/*B*" out="***/*B*/***"/>
+            <rule in="*BB*/BGGB/*BB*" out="****/*BB*/****"/>
+          </all>
         </sequence>
         "#
     )
