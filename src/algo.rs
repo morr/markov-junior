@@ -60,23 +60,13 @@ impl MarkovJunior<'_> {
 
             for rule_or_sequence in &sequence.vec {
                 let prev_changes = self.changes;
+
                 match rule_or_sequence {
                     RuleOrSequence::Rule(rule) => {
                         step_change |= self.apply_rule(rule);
 
                         if is_root {
-                            println!(
-                                "Rule kind: {:?}, steps: {:?}, changes: {}",
-                                rule.kind,
-                                rule.steps,
-                                self.changes - prev_changes
-                            );
-                            for pattern_rule in rule.patterns.iter() {
-                                println!(
-                                    "{} => {}",
-                                    pattern_rule.input.line, pattern_rule.output.line,
-                                );
-                            }
+                            Self::print_rule(rule, Some(self.changes - prev_changes));
                         }
                     }
                     RuleOrSequence::Sequence(nested_sequence) => {
@@ -90,16 +80,7 @@ impl MarkovJunior<'_> {
                                         unreachable!("Deep nested sequences are not allowed");
                                     }
                                     RuleOrSequence::Rule(rule) => {
-                                        println!(
-                                            "Rule kind: {:?}, steps: {:?}",
-                                            rule.kind, rule.steps,
-                                        );
-                                        for pattern_rule in rule.patterns.iter() {
-                                            println!(
-                                                "{} => {}",
-                                                pattern_rule.input.line, pattern_rule.output.line,
-                                            );
-                                        }
+                                        Self::print_rule(rule, None);
                                     }
                                 }
                             }
@@ -487,6 +468,23 @@ impl MarkovJunior<'_> {
                 print!("{}", self.grid[y * self.width + x] as char);
             }
             println!();
+        }
+    }
+
+    pub fn print_rule(rule: &Rule, maybe_changes: Option<usize>) {
+        if let Some(changes) = maybe_changes {
+            println!(
+                "Rule kind: {:?}, steps: {:?}, changes: {}",
+                rule.kind, rule.steps, changes
+            );
+        } else {
+            println!("Rule kind: {:?}, steps: {:?}", rule.kind, rule.steps);
+        }
+        for pattern_rule in rule.patterns.iter() {
+            println!(
+                "{} => {}",
+                pattern_rule.input.line, pattern_rule.output.line,
+            );
         }
     }
 
