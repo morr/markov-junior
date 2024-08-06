@@ -6,7 +6,7 @@ use std::{collections::BTreeMap, fs::OpenOptions, io::Write, ops::Range};
 // #[cfg(feature = "parallel")]
 // use rayon::prelude::*;
 
-pub struct MarkovJunior {
+pub struct MarkovJunior<'a> {
     pub grid: Vec<u8>,
     pub width: usize,
     pub height: usize,
@@ -14,9 +14,11 @@ pub struct MarkovJunior {
     pub changes: usize,
     pub rng: ChaCha8Rng,
     pub seed: u64,
+    pub maybe_output_file: Option<&'a str>,
+    pub maybe_log_cmd: Option<&'a str>,
 }
 
-impl MarkovJunior {
+impl MarkovJunior<'_> {
     pub fn new(default: char, width: usize, height: usize, seed: Option<u64>) -> Self {
         let seed = seed.unwrap_or_else(|| rand::thread_rng().gen());
 
@@ -28,6 +30,8 @@ impl MarkovJunior {
             changes: 0,
             rng: ChaCha8Rng::seed_from_u64(seed),
             seed,
+            maybe_output_file: None,
+            maybe_log_cmd: None,
         }
     }
 
@@ -42,6 +46,8 @@ impl MarkovJunior {
             changes: 0,
             rng: ChaCha8Rng::seed_from_u64(seed),
             seed,
+            maybe_output_file: None,
+            maybe_log_cmd: None,
         }
     }
 
@@ -61,6 +67,9 @@ impl MarkovJunior {
                         step_change |= self.apply_sequence(nested_sequence);
                     }
                 }
+
+                self.try_log_to_output_file();
+                self.trye_log_command();
             }
 
             any_change |= step_change;
@@ -444,7 +453,11 @@ impl MarkovJunior {
         }
     }
 
-    pub fn log_grid(&self, filename: String) {
+    pub fn try_log_to_output_file(&self) {
+        let Some(filename) = self.maybe_output_file else {
+            return;
+        };
+
         let mut file = OpenOptions::new()
             .write(true)
             .truncate(true)
@@ -459,6 +472,20 @@ impl MarkovJunior {
             }
             writeln!(file).expect("Failed to write to file");
         }
+    }
+
+    fn trye_log_command(&self) {
+        let Some(log_cmd) = self.maybe_log_cmd else {
+            return;
+        };
+
+        std::process::Command::new("sh")
+            .arg("-c")
+            .arg(log_cmd)
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .status()
+            .expect("Failed to execute shell command");
     }
 
     fn cached_patterns(cache: &BTreeMap<(usize, usize), Vec<PatternMatch>>) -> Vec<&PatternMatch> {
