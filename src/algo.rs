@@ -51,7 +51,7 @@ impl MarkovJunior<'_> {
         }
     }
 
-    pub fn apply_sequence(&mut self, sequence: &Sequence) -> bool {
+    pub fn apply_sequence(&mut self, sequence: &Sequence, is_root: bool) -> bool {
         let steps = sequence.steps.unwrap_or(self.width * self.height);
         let mut any_change = false;
 
@@ -59,17 +59,58 @@ impl MarkovJunior<'_> {
             let mut step_change = false;
 
             for rule_or_sequence in &sequence.vec {
+                let prev_changes = self.changes;
                 match rule_or_sequence {
                     RuleOrSequence::Rule(rule) => {
                         step_change |= self.apply_rule(rule);
+
+                        if is_root {
+                            println!(
+                                "Rule kind: {:?}, steps: {:?}, changes: {}",
+                                rule.kind,
+                                rule.steps,
+                                self.changes - prev_changes
+                            );
+                            for pattern_rule in rule.patterns.iter() {
+                                println!(
+                                    "{} => {}",
+                                    pattern_rule.input.line, pattern_rule.output.line,
+                                );
+                            }
+                        }
                     }
                     RuleOrSequence::Sequence(nested_sequence) => {
-                        step_change |= self.apply_sequence(nested_sequence);
+                        step_change |= self.apply_sequence(nested_sequence, false);
+
+                        if is_root {
+                            println!("Sequence changes: {}", self.changes - prev_changes);
+                            for rule_or_sequence in &nested_sequence.vec {
+                                match rule_or_sequence {
+                                    RuleOrSequence::Sequence(_) => {
+                                        unreachable!("Deep nested sequences are not allowed");
+                                    }
+                                    RuleOrSequence::Rule(rule) => {
+                                        println!(
+                                            "Rule kind: {:?}, steps: {:?}",
+                                            rule.kind, rule.steps,
+                                        );
+                                        for pattern_rule in rule.patterns.iter() {
+                                            println!(
+                                                "{} => {}",
+                                                pattern_rule.input.line, pattern_rule.output.line,
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
-                self.try_log_to_output_file();
-                self.trye_log_command();
+                if is_root {
+                    self.try_log_to_output_file();
+                    self.trye_log_command();
+                }
             }
 
             any_change |= step_change;
@@ -79,13 +120,16 @@ impl MarkovJunior<'_> {
             }
         }
 
+        if !is_root {
+            self.try_log_to_output_file();
+            self.trye_log_command();
+        }
+
         any_change
     }
 
     pub fn apply_rule(&mut self, rule: &Rule) -> bool {
         let steps = rule.steps.unwrap_or(self.width * self.height * 16);
-        let prev_changes = self.changes;
-
         self.precompute_canonical_forms(rule);
         let mut cache = self.compute_cache(rule, &(0..self.width), &(0..self.height));
 
@@ -103,19 +147,6 @@ impl MarkovJunior<'_> {
             if !step_change {
                 break;
             }
-        }
-
-        println!(
-            "Rule kind: {:?}, steps: {:?}, changes: {}",
-            rule.kind,
-            rule.steps,
-            self.changes - prev_changes
-        );
-        for pattern_rule in rule.patterns.iter() {
-            println!(
-                "{} => {}",
-                pattern_rule.input.line, pattern_rule.output.line,
-            );
         }
 
         any_change

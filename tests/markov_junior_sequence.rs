@@ -31,7 +31,7 @@ fn test_generate() {
         steps: None,
     });
 
-    mj.apply_sequence(&sequence);
+    mj.apply_sequence(&sequence, true);
 
     assert_eq!(
         mj.grid,
@@ -61,7 +61,7 @@ fn test_generate_2() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.apply_sequence(&sequence);
+    mj.apply_sequence(&sequence, true);
 
     assert_eq!(
         mj.grid,
@@ -101,7 +101,7 @@ fn test_generate_3() {
             steps: None,
         },
     ]);
-    mj.apply_sequence(&sequence);
+    mj.apply_sequence(&sequence, true);
 
     assert_eq!(
         mj.grid,
@@ -141,7 +141,7 @@ fn test_generate_4() {
             steps: None,
         },
     ]);
-    mj.apply_sequence(&sequence);
+    mj.apply_sequence(&sequence, true);
 
     assert_eq!(
         mj.grid,
@@ -171,7 +171,7 @@ fn test_generate_5() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.apply_sequence(&sequence);
+    mj.apply_sequence(&sequence, true);
 
     assert_eq!(
         mj.grid,
@@ -201,7 +201,7 @@ fn test_generate_6() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.apply_sequence(&sequence);
+    mj.apply_sequence(&sequence, true);
 
     assert_eq!(
         mj.grid,
@@ -230,7 +230,7 @@ fn test_generate_7() {
         kind: RuleKind::One,
         steps: None,
     });
-    mj.apply_sequence(&sequence);
+    mj.apply_sequence(&sequence, true);
 
     assert_eq!(mj.changes, 1);
     assert_eq!(

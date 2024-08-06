@@ -55,7 +55,7 @@ fn main() {
     mj.maybe_log_cmd = maybe_log_cmd.as_deref();
     mj.maybe_output_file = maybe_output_file.as_deref();
 
-    mj.apply_sequence(&sequence);
+    mj.apply_sequence(&sequence, true);
 
     if maybe_output_file.is_none() {
         mj.print_grid();
