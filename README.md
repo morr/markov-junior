@@ -1,6 +1,7 @@
 ## how to run
 ```sh
-cargo build --release && time cargo run --release -- --size 180 --model River --output output.txt --log_cmd "cat output.txt | pattern-to-png 1x | imgcat --width=50"
+cargo build --release && time cargo run --release -- --size 150 --model River --output output.txt --log_cmd "cat output.txt | pattern-to-png 1x | imgcat --width=50"
+cargo build --release && time cargo run --release -- --size 150 --model FireNoise --output output.txt --log_cmd "cat output.txt | pattern-to-png 1x | imgcat --width=50"
 ```
 
 ```sh
