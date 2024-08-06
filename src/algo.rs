@@ -111,6 +111,12 @@ impl MarkovJunior<'_> {
             rule.steps,
             self.changes - prev_changes
         );
+        for pattern_rule in rule.patterns.iter() {
+            println!(
+                "{} => {}",
+                pattern_rule.input.line, pattern_rule.output.line,
+            );
+        }
 
         any_change
     }
